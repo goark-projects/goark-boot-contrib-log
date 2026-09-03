@@ -5,7 +5,7 @@ go 1.25
 require (
 	goark.dev/boot v0.0.0-20260902110755-1bc0082c607a
 	goark.dev/goark v0.0.0-20260903021045-47c39724cfc4
-	goark.dev/log v0.0.3-0.20260903102809-61cbe26158d4
+	goark.dev/log v0.0.3-0.20260903121202-e1c0a25b1eb5
 )
 
 require (
