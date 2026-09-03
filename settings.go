@@ -42,6 +42,10 @@ func newSettings(environment coreenv.Environment, options []Option) (settings, e
 }
 
 func defaultLoggerContextFactory(ctx context.Context, environment coreenv.Environment) (*goarklog.LoggerContext, error) {
-	returnContext, _, err := goarklog.NewConfiguredLoggerContext(ctx, goarklog.WithBootPropertyResolver(environment))
+	returnContext, _, err := goarklog.NewConfiguredLoggerContext(
+		ctx,
+		goarklog.WithBootPropertyResolver(environment),
+		goarklog.WithOptionsCustomizer(loggingOptionsCustomizer(environment)),
+	)
 	return returnContext, err
 }

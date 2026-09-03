@@ -3,9 +3,9 @@ module goark.dev/gbc-log
 go 1.25
 
 require (
-	goark.dev/boot v0.0.0-20260902110755-1bc0082c607a
-	goark.dev/goark v0.0.0-20260903021045-47c39724cfc4
-	goark.dev/log v0.0.3-0.20260903130032-7307f7e86ccc
+	goark.dev/boot v0.0.0-20260903174742-ca13efcd3a24
+	goark.dev/goark v0.0.0-20260903173732-3182772149df
+	goark.dev/log v0.0.3-0.20260903140034-d1cef0b3d069
 )
 
 require (

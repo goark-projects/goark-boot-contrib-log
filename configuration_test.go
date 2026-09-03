@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"context"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"goark.dev/boot"
+	"goark.dev/boot/configdata"
 	gbclog "goark.dev/gbc-log"
 	"goark.dev/goark"
 	coreenv "goark.dev/goark/core/env"
@@ -61,5 +64,49 @@ func TestAutoConfigureDisabledKeepsExistingLogger(t *testing.T) {
 func TestRuntimeOrderKeepsLoggerAliveThroughProviderShutdown(t *testing.T) {
 	if order := (&gbclog.Runtime{}).Order(); order != -11000 {
 		t.Fatalf("runtime order = %d, want -11000", order)
+	}
+}
+
+func TestAutoConfigure_whenLoggingPropertiesExist_shouldWriteConfiguredNamedLogger(t *testing.T) {
+	root := t.TempDir()
+	logFile := filepath.Join(root, "admin.log")
+	config := "logging:\n" +
+		"  level:\n" +
+		"    root: info\n" +
+		"    admin.service: debug\n" +
+		"  pattern:\n" +
+		"    file: '%level|%logger|%msg%n'\n" +
+		"  file:\n" +
+		"    name: '" + filepath.ToSlash(logFile) + "'\n"
+	if err := os.WriteFile(filepath.Join(root, "app.yml"), []byte(config), 0o644); err != nil {
+		t.Fatalf("write app config failed: %v", err)
+	}
+
+	app, err := boot.Run(
+		t.Context(),
+		boot.WithConfigDataOptions(configdata.WithLocations(root)),
+		boot.WithAutoConfiguration(gbclog.AutoConfigure()),
+	)
+	if err != nil {
+		t.Fatalf("boot.Run: %v", err)
+	}
+	appContext, _ := app.Context()
+	loggerContext := goark.MustGet[*goarklog.LoggerContext](t.Context(), appContext, gbclog.BeanNameContext)
+	loggerContext.Logger("admin.service").DebugContext(t.Context(), "named debug")
+	loggerContext.Logger("other.service").DebugContext(t.Context(), "root debug")
+	if err := app.Close(t.Context()); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	content, err := os.ReadFile(logFile)
+	if err != nil {
+		t.Fatalf("read log file failed: %v", err)
+	}
+	output := string(content)
+	if !strings.Contains(output, "DEBUG|admin.service|named debug") {
+		t.Fatalf("configured named logger output missing: %q", output)
+	}
+	if strings.Contains(output, "root debug") {
+		t.Fatalf("root level did not suppress debug event: %q", output)
 	}
 }
