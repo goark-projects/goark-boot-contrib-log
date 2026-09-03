@@ -18,7 +18,7 @@ type Runtime struct {
 	closeErr        error
 }
 
-// Stop 在观测 Provider 停止前排空并关闭日志运行期。
+// Stop 在观测 Provider 停止后排空并关闭日志运行期。
 func (r *Runtime) Stop(context.Context) error { return r.Close() }
 
 // Logger 返回应用级结构化日志器。
@@ -53,5 +53,5 @@ func (r *Runtime) Close() error {
 	return r.closeErr
 }
 
-// Order 让日志在普通组件之后、观测 Provider 之前关闭。
-func (*Runtime) Order() int { return -9000 }
+// Order 让日志先于观测 Provider 启动，并在 Provider 之后关闭。
+func (*Runtime) Order() int { return -11000 }

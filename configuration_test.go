@@ -57,3 +57,9 @@ func TestAutoConfigureDisabledKeepsExistingLogger(t *testing.T) {
 		t.Fatalf("Close: %v", err)
 	}
 }
+
+func TestRuntimeOrderKeepsLoggerAliveThroughProviderShutdown(t *testing.T) {
+	if order := (&gbclog.Runtime{}).Order(); order != -11000 {
+		t.Fatalf("runtime order = %d, want -11000", order)
+	}
+}

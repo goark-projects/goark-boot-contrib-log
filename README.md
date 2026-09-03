@@ -2,7 +2,7 @@
 
 [简体中文](README.zh-CN.md)
 
-`goark.dev/gbc-log` is the Goark Boot starter for `goark.dev/log`. It creates the application logging runtime, exposes the primary `*slog.Logger`, optionally installs it as `slog.Default`, and drains logging before observability exporters shut down.
+`goark.dev/gbc-log` is the Goark Boot starter for `goark.dev/log`. It creates the application logging runtime, exposes the primary `*slog.Logger`, optionally installs it as `slog.Default`, and keeps logging available until observability exporters shut down.
 
 ## Usage
 
@@ -28,7 +28,7 @@ The starter reuses goark-log configuration discovery. Configure a file through `
 
 ## Lifecycle
 
-The runtime order is `-9000`. It stops after ordinary application components and before the observability provider at `-10000`, so telemetry exported to goark-log is drained before exporter shutdown.
+The runtime order is `-11000`. It starts before the observability provider at `-10000` and stops after it, so provider flush and shutdown can emit their final records before goark-log drains and closes.
 
 ## Validation
 

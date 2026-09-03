@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-`goark.dev/gbc-log` 是 `goark.dev/log` 的 Goark Boot Starter。它创建应用日志运行期，暴露 primary `*slog.Logger`，可选安装为 `slog.Default`，并在观测 exporter 关闭前排空日志。
+`goark.dev/gbc-log` 是 `goark.dev/log` 的 Goark Boot Starter。它创建应用日志运行期，暴露 primary `*slog.Logger`，可选安装为 `slog.Default`，并保持日志可用直至观测 exporter 关闭。
 
 ## 使用方式
 
@@ -28,7 +28,7 @@ Starter 直接复用 goark-log 的配置发现机制。可以通过 `goark.log.c
 
 ## 生命周期
 
-运行期顺序是 `-9000`。它在普通应用组件之后、顺序为 `-10000` 的观测 Provider 之前停止，保证输出到 goark-log 的 telemetry 在 exporter 关闭前排空。
+运行期顺序是 `-11000`。它在顺序为 `-10000` 的观测 Provider 之前启动、之后停止，保证 Provider 刷新和关闭期间产生的最终记录仍可写入，随后再排空 goark-log。
 
 ## 验证
 
