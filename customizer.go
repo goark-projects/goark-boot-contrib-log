@@ -92,6 +92,11 @@ func applyAppenderThreshold(options *goarklog.Options, wanted string, level *slo
 	if name == "" {
 		return
 	}
+	if len(options.Root.AppenderRefs) == 0 && len(options.Root.AppenderRefControls) == 0 &&
+		len(options.Appenders) > 0 && options.Appenders[0] != nil && strings.EqualFold(options.Appenders[0].Name(), name) {
+		options.Root.AppenderRefControls = append(options.Root.AppenderRefControls,
+			goarklog.NewAppenderRef(name, goarklog.WithAppenderRefLevel(*level)))
+	}
 	applyReferenceThreshold(&options.Root.AppenderRefs, &options.Root.AppenderRefControls, name, *level)
 	for index := range options.Loggers {
 		applyReferenceThreshold(&options.Loggers[index].AppenderRefs, &options.Loggers[index].AppenderRefControls, name, *level)

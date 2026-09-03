@@ -109,6 +109,32 @@ func TestLoggingOptionsCustomizer_whenFileConfigExists_shouldPreserveAppenderAnd
 	}
 }
 
+func TestLoggingOptionsCustomizer_whenRootUsesImplicitAppender_shouldApplyThreshold(t *testing.T) {
+	console := goarklog.NewConsoleAppender()
+	original := goarklog.Options{
+		Appenders: []goarklog.Appender{console},
+		Root:      goarklog.RootLogger{Level: slog.LevelDebug},
+	}
+	environment := newLoggingEnvironment(t, map[string]any{
+		PropertyConsoleThreshold: "error",
+	})
+
+	options, err := loggingOptionsCustomizer(environment)(
+		context.Background(), original, &goarklog.ConfigResult{Source: goarklog.ConfigSourceExplicit},
+	)
+	if err != nil {
+		t.Fatalf("customize options failed: %v", err)
+	}
+	defer closeAppenders(t, options.Appenders)
+	if len(options.Root.AppenderRefControls) != 1 {
+		t.Fatalf("root controls = %#v, want implicit appender threshold", options.Root.AppenderRefControls)
+	}
+	control := options.Root.AppenderRefControls[0]
+	if control.Ref != console.Name() || control.Level == nil || *control.Level != slog.LevelError {
+		t.Fatalf("root control = %#v, want console ERROR threshold", control)
+	}
+}
+
 func newLoggingEnvironment(t *testing.T, values map[string]any) coreenv.Environment {
 	t.Helper()
 	environment, err := coreenv.NewStandardEnvironment()
