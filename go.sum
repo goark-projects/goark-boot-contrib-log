@@ -81,8 +81,8 @@ goark.dev/boot v0.0.0-20260903174742-ca13efcd3a24 h1:812FJQSH2CrHI3BNQeZh2usXgdh
 goark.dev/boot v0.0.0-20260903174742-ca13efcd3a24/go.mod h1:1pXg47d2vpbH5LUMVhcOXXxUBPHSodBj/lZaAj89Q1Y=
 goark.dev/goark v0.0.0-20260904010411-d90ef90bc395 h1:zf7ThcMmSTPGpKrlLqZJjMjiI65FpahwT5bkojCkknQ=
 goark.dev/goark v0.0.0-20260904010411-d90ef90bc395/go.mod h1:k12AuZNrxTiRYbgFLfM/G450VqGHxhgLywK6K3q87HY=
-goark.dev/log v0.0.3-0.20260904005644-241c66208df9 h1:rEk/5LjPFmLCx4TVdJm5uql215xNFmnbM35XoAjC08g=
-goark.dev/log v0.0.3-0.20260904005644-241c66208df9/go.mod h1:sffd5WOOLgMb1mRsfjVtVsTdOwAj/3V4zoCbPmUf71w=
+goark.dev/log v0.0.3-0.20260904011940-5fb224b05b13 h1:5Ak+aaTsXAxPapE/xfCP5dd0ZIuQ8bjFoB0EhtuXG88=
+goark.dev/log v0.0.3-0.20260904011940-5fb224b05b13/go.mod h1:sffd5WOOLgMb1mRsfjVtVsTdOwAj/3V4zoCbPmUf71w=
 golang.org/x/arch v0.0.0-20210923205945-b76863e36670 h1:18EFjUmQOcUvxNYSkA6jO9VAiXCnxFY6NyDX0bHDmkU=
 golang.org/x/arch v0.0.0-20210923205945-b76863e36670/go.mod h1:5om86z9Hs0C8fWVUuoMHwpExlXzs5Tkyp9hOrfG7pp8=
 golang.org/x/sys v0.29.0 h1:TPYlXGxvx1MGTn2GiZDhnjPA9wZzZeGKHHmKhHYvgaU=
