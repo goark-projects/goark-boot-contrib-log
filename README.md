@@ -2,54 +2,36 @@
 
 [简体中文](README.zh-CN.md)
 
-`goark.dev/gbc-log` integrates Goark Boot with `goark.dev/log`. It creates the
-logging runtime before infrastructure starters, exposes the primary
-`*slog.Logger`, installs it as `slog.Default` by default, and drains it after
-observability exporters stop.
+`goark.dev/gbc-log` integrates `goark.dev/log` with Goark Boot. It maps
+`logging.*`, installs the primary `*slog.Logger`, exposes runtime level control,
+and gives the logging runtime one lifecycle owner.
 
-## Responsibilities
+The stable compatibility baseline is Spring Boot 4.1.1. Spring Boot 4.2.0-M1
+is audited for forward compatibility only; milestone behavior is not a stable
+Goark contract.
 
-- `goark.dev/log` owns logger APIs, handlers, appenders, layouts, filters,
-  asynchronous delivery, configuration files, and reload.
-- `goark.dev/gbc-log` reads Boot's `Environment`, maps `logging.*`, registers
-  beans, installs the process default logger, and manages lifecycle ordering.
-- Other libraries depend on `log/slog` or `goark.dev/log`; they do not depend on
-  this starter.
+## Ownership
 
-## Usage
+- `goark.dev/log` owns handlers, routing, appenders, layouts, filters, async
+  delivery, native configuration, reload, and encoding.
+- `goark.dev/gbc-log` owns Boot property mapping, beans, default logger
+  installation, and lifecycle ordering.
+- Framework code logs through `log/slog` or `goark.dev/log`; the engine does not
+  depend on Boot or observability.
+
+## Quick Start
 
 ```go
-app, err := boot.Run(ctx, boot.WithAutoConfiguration(
-	gbclog.AutoConfigure(),
-))
+app, err := boot.Run(ctx, boot.WithAutoConfiguration(gbclog.AutoConfigure()))
 ```
-
-## Properties
-
-| Property | Default | Description |
-| --- | --- | --- |
-| `goark.log.enabled` | `true` | Enables the managed goark-log runtime |
-| `goark.log.install-default` | `true` | Installs the logger as `slog.Default` |
-| `logging.config` | auto-discovery | Exact goark-log config file path |
-| `logging.level.root` | `INFO` | Root logger level |
-| `logging.level.<logger>` | inherited | Named logger level |
-| `logging.group.<name>` | unset | Comma-separated logger names in a group |
-| `logging.level.<group>` | unset | Level applied to all group members |
-| `logging.pattern.console` | Spring Boot style | Default console PatternLayout pattern |
-| `logging.pattern.file` | Spring Boot style | Default file PatternLayout pattern |
-| `logging.file.name` | unset | Exact default log file path |
-| `logging.file.path` | unset | Directory for the default `goark.log` file |
-| `logging.threshold.console` | unset | Console appender threshold |
-| `logging.threshold.file` | unset | File appender threshold |
-
-`logging.file.name` takes precedence over `logging.file.path`. Levels accept all
-names registered in goark-log, including `ALL`, `TRACE`, `DEBUG`, `INFO`,
-`WARN`, `ERROR`, `FATAL`, and `OFF`.
 
 ```yaml
 goark:
   application:
     name: admin
+  log:
+    enabled: true
+    install-default: true
 
 logging:
   level:
@@ -57,48 +39,98 @@ logging:
     web: debug
     goark.dev.orm: warn
   group:
-    web: goark.dev.arkhos,goark.dev.goark
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5level %logger : %msg%n"
-    file: "%d{ISO8601} %level %logger %msg%n"
+    web: goark.dev.arkhos,goark.dev.goark.web
   file:
     name: logs/admin.log
+    max-size: 20M
+    max-history: 14
+    total-size-cap: 1G
   threshold:
     console: info
     file: debug
 ```
 
-Direct logger levels override levels expanded from groups.
+Default output uses `yyyy-MM-dd HH:mm:ss.SSS`. The logger
+`goark.dev.arkhos.hertz` is abbreviated as `g.d.arkhos.hertz` by default.
 
-## Independent Configuration
+## Structured Logging
 
-`logging.config` selects a native goark-log YAML, TOML, JSON, XML, or properties
-configuration file. When one is selected:
+Console and file outputs independently support `ecs`, `gelf`, and `logstash`:
 
-- Its appenders, layouts, filters, additivity, async settings, and reload policy
-  remain authoritative.
-- `logging.level.*` overrides root and named logger levels.
-- `logging.threshold.console` and `logging.threshold.file` override matching
-  appender-reference thresholds while preserving filters and location settings.
-- `logging.pattern.*` and `logging.file.*` only customize the starter's default
-  outputs and do not replace explicit appenders or layouts.
+```yaml
+logging:
+  structured:
+    format:
+      console: ecs
+      file: logstash
+    json:
+      context:
+        include: true
+        prefix: ctx.
+      exclude: process.thread.name
+      rename:
+        message: msg
+      add:
+        deployment: production
+      stacktrace:
+        root: first
+        max-length: 8192
+        max-throwable-depth: 8
+        include-common-frames: false
+        include-hashes: true
+    ecs:
+      service:
+        environment: production
+        version: 1.2.0
+```
 
-## Beans
+Java class names in `logging.structured.json.customizer` are rejected. Use the
+typed `WithStructuredJSONCustomizers` option for Go implementations.
+
+## Native Configuration
+
+`logging.config` accepts a goark-log YAML, TOML, JSON, XML, or properties
+resource. Relative paths, absolute paths, `file:`, and explicitly registered
+`classpath:` resources are supported. Missing, unreadable, malformed, or
+unknown resources fail startup.
+
+Native configuration remains authoritative for appenders, layouts, filters,
+additivity, async behavior, and reload. `logging.level.*` and matching
+console/file thresholds are applied as Boot overrides. Default pattern, file,
+charset, rolling, and structured properties do not replace native appenders.
+
+## Runtime API
 
 - `goark.log.logger`: primary `*slog.Logger`.
-- `goark.log.context`: managed `*goarklog.LoggerContext` when enabled.
-- `goark.log.lifecycle`: default-logger restoration and shutdown runtime.
+- `goark.log.context`: lifecycle-neutral `*goarklog.LoggerContext` alias.
+- `goark.log.system`: `gbclog.LoggingSystem` for atomic level changes and
+  snapshots.
+- `goark.log.lifecycle`: sole owner of restoration and shutdown.
 
-The runtime order is `-11000`. It starts before the observability provider at
-`-10000` and stops after it, allowing exporter flush and shutdown records to be
-written before goark-log drains.
+```go
+system := goark.MustGet[gbclog.LoggingSystem](ctx, appContext, gbclog.BeanNameSystem)
+debug := slog.LevelDebug
+_ = system.SetLogLevel("admin.service", &debug)
+configuration, found := system.LogLevel("admin.service")
+_ = system.SetLogLevel("admin.service", nil)
+```
 
-## Validation
+`logging.register-shutdown-hook=true` means Boot closes and drains goark-log.
+No second OS signal hook is registered. Set it to `false` only when another
+owner closes the `LoggerContext`.
+
+## Reference
+
+- [Configuration reference](docs/configuration-reference.md)
+- [Spring Boot parity](docs/spring-boot-logging-parity.md)
+
+## Verification
 
 ```bash
 go test ./...
 go test -race ./...
 go vet ./...
+GOWORK=off go test ./...
 ```
 
 Licensed under Apache License 2.0.

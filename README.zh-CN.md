@@ -2,68 +2,80 @@
 
 [English](README.md)
 
-`goark.dev/gbc-log` 负责 Goark Boot 与 `goark.dev/log` 的集成。它在基础设施
-Starter 之前创建日志运行期，暴露 primary `*slog.Logger`，默认安装为
-`slog.Default`，并在观测 Exporter 停止后排空日志。
+`goark.dev/gbc-log` 负责 `goark.dev/log` 与 Goark Boot 的集成：映射
+`logging.*`，安装 primary `*slog.Logger`，提供运行期级别控制，并保证日志
+运行期只有一个生命周期所有者。
+
+稳定对齐基线是 Spring Boot 4.1.1；Spring Boot 4.2.0-M1 只用于前向审计，
+里程碑版本中的可变行为不会成为 Goark 稳定契约。
 
 ## 职责边界
 
-- `goark.dev/log` 负责 Logger API、Handler、Appender、Layout、Filter、异步
-  投递、独立配置文件及重载。
-- `goark.dev/gbc-log` 读取 Boot `Environment`，解释 `logging.*`，注册 Bean，
-  安装进程默认 Logger，并管理生命周期顺序。
-- 其他库依赖 `log/slog` 或 `goark.dev/log`，不依赖本 Starter。
+- `goark.dev/log` 负责 Handler、路由、Appender、Layout、Filter、异步投递、
+  原生配置、重载和编码。
+- `goark.dev/gbc-log` 负责 Boot 属性映射、Bean、默认 Logger 和生命周期顺序。
+- 框架代码只依赖 `log/slog` 或 `goark.dev/log`；日志引擎不依赖 Boot 和观测。
 
-## 使用方式
+## 快速使用
 
 ```go
-app, err := boot.Run(ctx, boot.WithAutoConfiguration(
-	gbclog.AutoConfigure(),
-))
+app, err := boot.Run(ctx, boot.WithAutoConfiguration(gbclog.AutoConfigure()))
 ```
 
-## 配置属性
+```yaml
+goark:
+  application:
+    name: admin
+  log:
+    enabled: true
+    install-default: true
+logging:
+  level:
+    root: info
+    web: debug
+  group:
+    web: goark.dev.arkhos,goark.dev.goark.web
+  file:
+    name: logs/admin.log
+    max-size: 20M
+    max-history: 14
+    total-size-cap: 1G
+```
 
-| 属性 | 默认值 | 说明 |
-| --- | --- | --- |
-| `goark.log.enabled` | `true` | 是否启用受管 goark-log 运行期 |
-| `goark.log.install-default` | `true` | 是否安装为 `slog.Default` |
-| `logging.config` | 自动发现 | 独立 goark-log 配置文件的精确路径 |
-| `logging.level.root` | `INFO` | 根 Logger 级别 |
-| `logging.level.<logger>` | 继承 | 命名 Logger 级别 |
-| `logging.group.<name>` | 未设置 | 日志组包含的 Logger 名称，逗号分隔 |
-| `logging.level.<group>` | 未设置 | 应用于组内全部 Logger 的级别 |
-| `logging.pattern.console` | Spring Boot 风格 | 默认控制台 PatternLayout 格式 |
-| `logging.pattern.file` | Spring Boot 风格 | 默认文件 PatternLayout 格式 |
-| `logging.file.name` | 未设置 | 默认日志文件的精确路径 |
-| `logging.file.path` | 未设置 | 默认 `goark.log` 文件所在目录 |
-| `logging.threshold.console` | 未设置 | 控制台 Appender 阈值 |
-| `logging.threshold.file` | 未设置 | 文件 Appender 阈值 |
+默认日期格式为 `yyyy-MM-dd HH:mm:ss.SSS`，`goark.dev.arkhos.hertz` 默认缩写
+为 `g.d.arkhos.hertz`。
 
-`logging.file.name` 优先于 `logging.file.path`。日志级别支持 goark-log 注册表中的
-全部名称，包括 `ALL`、`TRACE`、`DEBUG`、`INFO`、`WARN`、`ERROR`、`FATAL`
-和 `OFF`。直接 Logger 配置优先于日志组展开结果。
+## 结构化日志
 
-## 独立日志配置
+控制台和文件可分别选择 `ecs`、`gelf`、`logstash`。`logging.structured.json`
+支持 include、exclude、rename、add、context 和 stacktrace 控制；ECS 支持服务
+元数据，GELF 支持 host 和服务版本。Java 类 Customizer 会被拒绝，Go 实现通过
+`WithStructuredJSONCustomizers` 显式注册。
 
-`logging.config` 可指定 goark-log 原生 YAML、TOML、JSON、XML 或 properties
-配置文件。使用独立配置文件时：
+## 原生配置
 
-- Appender、Layout、Filter、additivity、异步参数和重载策略由独立文件负责。
-- `logging.level.*` 覆盖根 Logger 与命名 Logger 级别。
-- `logging.threshold.console` 和 `logging.threshold.file` 覆盖同名 Appender 引用
-  的阈值，同时保留 Filter 与调用位置设置。
-- `logging.pattern.*` 和 `logging.file.*` 只定制 Starter 默认输出，不替换独立
-  配置中的 Appender 与 Layout。
+`logging.config` 可指定 goark-log YAML、TOML、JSON、XML 或 properties 资源，
+支持相对路径、绝对路径、`file:` 和显式注册文件系统中的 `classpath:`。资源
+缺失、不可读、格式错误或存在未知字段时启动失败。
 
-## Bean 与生命周期
+原生配置负责 Appender、Layout、Filter、additivity、异步和重载；
+`logging.level.*` 及匹配的 console/file threshold 作为 Boot 覆盖项继续生效。
+默认 pattern、file、charset、rolling、structured 属性不会替换原生 Appender。
+
+## 运行期 API
 
 - `goark.log.logger`：primary `*slog.Logger`。
-- `goark.log.context`：启用时由容器管理的 `*goarklog.LoggerContext`。
-- `goark.log.lifecycle`：负责恢复默认 Logger 和关闭日志运行期。
+- `goark.log.context`：生命周期中性的 `*goarklog.LoggerContext` 访问别名。
+- `goark.log.system`：原子修改级别和查询快照的 `LoggingSystem`。
+- `goark.log.lifecycle`：恢复默认 Logger、排空和关闭日志的唯一所有者。
 
-运行期顺序为 `-11000`。它在顺序为 `-10000` 的观测 Provider 之前启动、之后
-停止，保证 Exporter 刷新和关闭产生的最终记录仍可写入，随后再排空 goark-log。
+`logging.register-shutdown-hook=true` 表示由 Boot 关闭并排空 goark-log，不会注册
+第二套 OS 信号 Hook。只有外部组件明确负责关闭时才应设置为 `false`。
+
+## 参考
+
+- [配置参考](docs/configuration-reference.zh-CN.md)
+- [Spring Boot 对齐说明](docs/spring-boot-logging-parity.zh-CN.md)
 
 ## 验证
 
@@ -71,6 +83,7 @@ app, err := boot.Run(ctx, boot.WithAutoConfiguration(
 go test ./...
 go test -race ./...
 go vet ./...
+GOWORK=off go test ./...
 ```
 
 使用 Apache License 2.0。
