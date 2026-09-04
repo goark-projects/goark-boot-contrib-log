@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	internalproperties "goark.dev/gbc-log/internal/properties"
 	coreenv "goark.dev/goark/core/env"
 	goarklog "goark.dev/log"
 )
@@ -22,16 +23,16 @@ func loggingOptionsCustomizer(environment coreenv.Environment) goarklog.OptionsC
 			}
 		}
 		applyLoggerLevels(&current, properties)
-		applyAppenderThreshold(&current, "console", properties.consoleThreshold)
-		applyAppenderThreshold(&current, "file", properties.fileThreshold)
+		applyAppenderThreshold(&current, "console", properties.ConsoleThreshold)
+		applyAppenderThreshold(&current, "file", properties.FileThreshold)
 		return current, nil
 	}
 }
 
 func applyDefaultOutputs(options goarklog.Options, properties loggingProperties) (goarklog.Options, error) {
 	consoleOptions := make([]goarklog.ConsoleOption, 0, 1)
-	if strings.TrimSpace(properties.consolePattern) != "" {
-		layout, err := goarklog.NewPatternLayout(properties.consolePattern)
+	if strings.TrimSpace(properties.ConsolePattern) != "" {
+		layout, err := goarklog.NewPatternLayout(properties.ConsolePattern)
 		if err != nil {
 			return options, err
 		}
@@ -40,14 +41,14 @@ func applyDefaultOutputs(options goarklog.Options, properties loggingProperties)
 	appenders := []goarklog.Appender{goarklog.NewConsoleAppender(consoleOptions...)}
 	refs := []string{"console"}
 
-	fileName := strings.TrimSpace(properties.fileName)
-	if fileName == "" && strings.TrimSpace(properties.filePath) != "" {
-		fileName = filepath.Join(strings.TrimSpace(properties.filePath), "goark.log")
+	fileName := strings.TrimSpace(properties.FileName)
+	if fileName == "" && strings.TrimSpace(properties.FilePath) != "" {
+		fileName = filepath.Join(strings.TrimSpace(properties.FilePath), "goark.log")
 	}
 	if fileName != "" {
 		fileOptions := []goarklog.FileOption{goarklog.WithFileName("file")}
-		if strings.TrimSpace(properties.filePattern) != "" {
-			layout, err := goarklog.NewPatternLayout(properties.filePattern)
+		if strings.TrimSpace(properties.FilePattern) != "" {
+			layout, err := goarklog.NewPatternLayout(properties.FilePattern)
 			if err != nil {
 				return options, err
 			}
@@ -67,15 +68,15 @@ func applyDefaultOutputs(options goarklog.Options, properties loggingProperties)
 }
 
 func applyLoggerLevels(options *goarklog.Options, properties loggingProperties) {
-	if properties.rootLevel != nil {
-		options.Root.Level = *properties.rootLevel
+	if properties.RootLevel != nil {
+		options.Root.Level = *properties.RootLevel
 	}
 	indices := make(map[string]int, len(options.Loggers))
 	for index := range options.Loggers {
 		indices[options.Loggers[index].Name] = index
 	}
-	for _, name := range sortedLevelNames(properties.loggerLevels) {
-		level := properties.loggerLevels[name]
+	for _, name := range internalproperties.SortedLevelNames(properties.LoggerLevels) {
+		level := properties.LoggerLevels[name]
 		if index, found := indices[name]; found {
 			options.Loggers[index].Level = levelPointer(level)
 			continue

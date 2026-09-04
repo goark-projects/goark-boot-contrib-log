@@ -23,13 +23,13 @@ func TestReadLoggingProperties_whenLevelsAndGroupsExist_shouldResolveDirectLevel
 	if err != nil {
 		t.Fatalf("read logging properties failed: %v", err)
 	}
-	if properties.rootLevel == nil || *properties.rootLevel != slog.LevelWarn {
-		t.Fatalf("root level = %v, want WARN", properties.rootLevel)
+	if properties.RootLevel == nil || *properties.RootLevel != slog.LevelWarn {
+		t.Fatalf("root level = %v, want WARN", properties.RootLevel)
 	}
-	if got := properties.loggerLevels["goark.dev.arkhos"]; got != slog.LevelDebug {
+	if got := properties.LoggerLevels["goark.dev.arkhos"]; got != slog.LevelDebug {
 		t.Fatalf("group logger level = %s, want DEBUG", got)
 	}
-	if got := properties.loggerLevels["goark.dev.goark"]; got != slog.LevelError {
+	if got := properties.LoggerLevels["goark.dev.goark"]; got != slog.LevelError {
 		t.Fatalf("direct logger level = %s, want ERROR", got)
 	}
 }
