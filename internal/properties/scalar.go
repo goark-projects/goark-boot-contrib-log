@@ -64,8 +64,8 @@ func optionalInt(environment coreenv.Environment, key string) (*int, error) {
 		return nil, nil
 	}
 	parsed, err := strconv.Atoi(strings.TrimSpace(value))
-	if err != nil || parsed < 0 {
-		return nil, fmt.Errorf("gbc-log: %q must be a non-negative integer", key)
+	if err != nil || parsed <= 0 {
+		return nil, fmt.Errorf("gbc-log: %q must be a positive integer", key)
 	}
 	return &parsed, nil
 }

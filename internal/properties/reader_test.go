@@ -101,13 +101,15 @@ func TestRead_whenDirectLevelTargetsGroupMember_shouldOverrideExpandedLevel(t *t
 
 func TestRead_whenValuesAreInvalid_shouldFail(t *testing.T) {
 	tests := map[string]map[string]any{
-		"boolean":            {ConsoleEnabled: "sometimes"},
-		"integer":            {FileMaxHistory: "-1"},
-		"data size":          {FileMaxSize: "large"},
-		"structured format":  {StructuredConsoleFormat: "unknown"},
-		"stacktrace root":    {StacktraceRoot: "middle"},
-		"stacktrace printer": {StacktracePrinter: "custom.Type"},
-		"Java customizer":    {StructuredJSONCustomizer: "com.example.LoggingCustomizer"},
+		"boolean":                    {ConsoleEnabled: "sometimes"},
+		"integer":                    {FileMaxHistory: "-1"},
+		"data size":                  {FileMaxSize: "large"},
+		"structured format":          {StructuredConsoleFormat: "unknown"},
+		"stacktrace root":            {StacktraceRoot: "middle"},
+		"stacktrace printer":         {StacktracePrinter: "custom.Type"},
+		"zero stacktrace max length": {StacktraceMaxLength: "0"},
+		"zero throwable depth":       {StacktraceMaxDepth: "0"},
+		"Java customizer":            {StructuredJSONCustomizer: "com.example.LoggingCustomizer"},
 	}
 	for name, values := range tests {
 		t.Run(name, func(t *testing.T) {

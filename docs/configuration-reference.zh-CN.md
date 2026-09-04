@@ -52,9 +52,17 @@
 ECS 支持 service environment/name/node-name/version；GELF 支持 host 和 service
 version。
 
+`max-length` 和 `max-throwable-depth` 必须是正整数；前者按 UTF-8 字节限制并以
+`...` 结束截断结果，后者限制每个异常输出的栈帧数，不限制 cause 链长度。未配置
+其他异常属性时默认使用 `logging-system`；配置任意异常属性后默认使用
+`standard`，与 Spring Boot 4.1.1 一致。
+
 执行顺序为 include、exclude（优先）、rename。常量和 Go Customizer 走相同
 过滤链。Throwable、marker、线程和上下文栈控制属性不会重复输出。Java 类
 Customizer 会启动失败，必须使用 `WithStructuredJSONCustomizers`。
+ECS 将上下文和 add 的点分路径输出为嵌套对象，GELF 与 Logstash 保持扁平字段；
+ECS 和 Logstash 的 Marker 层级输出为排序后的 `tags` 数组。输出名称冲突时协议
+内建成员优先。
 
 ## 优先级
 

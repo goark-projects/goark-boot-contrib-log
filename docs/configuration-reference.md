@@ -65,8 +65,8 @@ Unknown charsets fail startup. UTF-8 adds no conversion layer.
 | `logging.structured.json.context.include` | Includes slog context; default `true` |
 | `logging.structured.json.context.prefix` | Prefixes context names |
 | `logging.structured.json.stacktrace.root` | `first` or `last` |
-| `logging.structured.json.stacktrace.max-length` | Maximum UTF-8 bytes; `0` is unlimited |
-| `logging.structured.json.stacktrace.max-throwable-depth` | Maximum cause depth; `0` is unlimited |
+| `logging.structured.json.stacktrace.max-length` | Positive maximum UTF-8 bytes; truncated output ends in `...` |
+| `logging.structured.json.stacktrace.max-throwable-depth` | Positive maximum frame count for every throwable |
 | `logging.structured.json.stacktrace.include-common-frames` | Includes common frames |
 | `logging.structured.json.stacktrace.include-hashes` | Adds stable frame hashes |
 | `logging.structured.json.stacktrace.printer` | `standard` or `logging-system` |
@@ -81,6 +81,12 @@ Include is applied first, exclusion wins, then rename. Additions and Go
 customizers use the same filter. Internal throwable, marker, thread, and stack
 control attributes are not duplicated as context. Java class customizers fail
 with guidance to use `WithStructuredJSONCustomizers`.
+
+ECS interprets dots in context and added member paths as nested objects; GELF
+and Logstash keep context names flat. ECS and Logstash marker hierarchies are
+sorted `tags` arrays. Built-in protocol members win on a duplicate output name.
+The default stacktrace printer is `logging-system` unless another stacktrace
+property is configured, matching Spring Boot 4.1.1.
 
 ## Precedence
 

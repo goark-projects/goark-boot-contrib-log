@@ -64,6 +64,7 @@ func structuredLayout(configuration properties.Properties, format string, custom
 		IncludeContext: includeContext,
 		ContextPrefix:  configuration.Structured.JSON.ContextPrefix,
 		Stacktrace: goarklog.StructuredStacktraceOptions{
+			Printer:             structuredStacktracePrinter(stacktrace),
 			RootFirst:           strings.EqualFold(stacktrace.Root, "first"),
 			MaxLength:           optionalIntValue(stacktrace.MaxLength),
 			MaxThrowableDepth:   optionalIntValue(stacktrace.MaxThrowableDepth),
@@ -87,6 +88,18 @@ func structuredLayout(configuration properties.Properties, format string, custom
 		return nil, fmt.Errorf("gbc-log: configure structured logging: %w", err)
 	}
 	return layout, nil
+}
+
+func structuredStacktracePrinter(stacktrace properties.StacktraceProperties) goarklog.StructuredStacktracePrinter {
+	printer := strings.ToLower(strings.TrimSpace(stacktrace.Printer))
+	if printer == "logging-system" {
+		return goarklog.StructuredStacktracePrinterLoggingSystem
+	}
+	if printer == "standard" || strings.TrimSpace(stacktrace.Root) != "" || stacktrace.MaxLength != nil ||
+		stacktrace.MaxThrowableDepth != nil || stacktrace.IncludeCommonFrames != nil || stacktrace.IncludeHashes != nil {
+		return goarklog.StructuredStacktracePrinterStandard
+	}
+	return goarklog.StructuredStacktracePrinterLoggingSystem
 }
 
 func optionalBoolValue(value *bool) bool {
