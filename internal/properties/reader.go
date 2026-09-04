@@ -42,7 +42,6 @@ func Read(environment coreenv.Environment) (Properties, error) {
 	properties.Structured.ECS.ServiceNodeName = optionalString(environment, ECSServiceNodeName)
 	properties.Structured.ECS.ServiceVersion = optionalString(environment, ECSServiceVersion)
 	properties.Structured.GELF.Host = optionalString(environment, GELFHost)
-	properties.Structured.GELF.ServiceName = optionalString(environment, GELFServiceName)
 	properties.Structured.GELF.ServiceVersion = optionalString(environment, GELFServiceVersion)
 
 	var err error

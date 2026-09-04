@@ -48,7 +48,6 @@ const (
 	ECSServiceNodeName       = "logging.structured.ecs.service.node-name"
 	ECSServiceVersion        = "logging.structured.ecs.service.version"
 	GELFHost                 = "logging.structured.gelf.host"
-	GELFServiceName          = "logging.structured.gelf.service.name"
 	GELFServiceVersion       = "logging.structured.gelf.service.version"
 	ApplicationName          = "goark.application.name"
 	ApplicationGroup         = "goark.application.group"

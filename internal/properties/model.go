@@ -76,6 +76,5 @@ type ECSProperties struct {
 // GELFProperties 描述 GELF 服务字段。
 type GELFProperties struct {
 	Host           string
-	ServiceName    string
 	ServiceVersion string
 }

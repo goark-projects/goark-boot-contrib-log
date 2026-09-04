@@ -78,7 +78,6 @@ func structuredLayout(configuration properties.Properties, format string, custom
 		},
 		GELF: goarklog.StructuredGELFOptions{
 			Host:           firstText(configuration.Structured.GELF.Host, configuration.ApplicationName),
-			ServiceName:    firstText(configuration.Structured.GELF.ServiceName, configuration.ApplicationName),
 			ServiceVersion: configuration.Structured.GELF.ServiceVersion,
 		},
 		Customizers: customizers,
