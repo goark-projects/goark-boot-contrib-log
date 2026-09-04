@@ -3,9 +3,9 @@ package gbclog
 import (
 	"context"
 	"log/slog"
-	"path/filepath"
 	"strings"
 
+	internaloutput "goark.dev/gbc-log/internal/output"
 	internalproperties "goark.dev/gbc-log/internal/properties"
 	coreenv "goark.dev/goark/core/env"
 	goarklog "goark.dev/log"
@@ -18,7 +18,7 @@ func loggingOptionsCustomizer(environment coreenv.Environment) goarklog.OptionsC
 			return current, err
 		}
 		if source != nil && source.Source == goarklog.ConfigSourceDefault {
-			if current, err = applyDefaultOutputs(current, properties); err != nil {
+			if current, err = internaloutput.ApplyDefault(current, properties); err != nil {
 				return current, err
 			}
 		}
@@ -27,44 +27,6 @@ func loggingOptionsCustomizer(environment coreenv.Environment) goarklog.OptionsC
 		applyAppenderThreshold(&current, "file", properties.FileThreshold)
 		return current, nil
 	}
-}
-
-func applyDefaultOutputs(options goarklog.Options, properties loggingProperties) (goarklog.Options, error) {
-	consoleOptions := make([]goarklog.ConsoleOption, 0, 1)
-	if strings.TrimSpace(properties.ConsolePattern) != "" {
-		layout, err := goarklog.NewPatternLayout(properties.ConsolePattern)
-		if err != nil {
-			return options, err
-		}
-		consoleOptions = append(consoleOptions, goarklog.WithConsoleLayout(layout))
-	}
-	appenders := []goarklog.Appender{goarklog.NewConsoleAppender(consoleOptions...)}
-	refs := []string{"console"}
-
-	fileName := strings.TrimSpace(properties.FileName)
-	if fileName == "" && strings.TrimSpace(properties.FilePath) != "" {
-		fileName = filepath.Join(strings.TrimSpace(properties.FilePath), "goark.log")
-	}
-	if fileName != "" {
-		fileOptions := []goarklog.FileOption{goarklog.WithFileName("file")}
-		if strings.TrimSpace(properties.FilePattern) != "" {
-			layout, err := goarklog.NewPatternLayout(properties.FilePattern)
-			if err != nil {
-				return options, err
-			}
-			fileOptions = append(fileOptions, goarklog.WithFileLayout(layout))
-		}
-		appender, err := goarklog.NewFileAppender(fileName, fileOptions...)
-		if err != nil {
-			return options, err
-		}
-		appenders = append(appenders, appender)
-		refs = append(refs, "file")
-	}
-	options.Appenders = appenders
-	options.Root.AppenderRefs = refs
-	options.Root.AppenderRefControls = nil
-	return options, nil
 }
 
 func applyLoggerLevels(options *goarklog.Options, properties loggingProperties) {
