@@ -107,6 +107,7 @@ func TestRead_whenValuesAreInvalid_shouldFail(t *testing.T) {
 		"structured format":  {StructuredConsoleFormat: "unknown"},
 		"stacktrace root":    {StacktraceRoot: "middle"},
 		"stacktrace printer": {StacktracePrinter: "custom.Type"},
+		"Java customizer":    {StructuredJSONCustomizer: "com.example.LoggingCustomizer"},
 	}
 	for name, values := range tests {
 		t.Run(name, func(t *testing.T) {

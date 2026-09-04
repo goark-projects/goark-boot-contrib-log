@@ -18,6 +18,7 @@ type settings struct {
 	factory        LoggerContextFactory
 	resourceLoader coreresource.Loader
 	classpathFS    fs.FS
+	customizers    []goarklog.StructuredJSONCustomizer
 }
 
 // Option 调整日志自动配置。
@@ -46,4 +47,10 @@ func WithResourceLoader(loader coreresource.Loader) Option {
 // WithClasspathFS 注册 classpath: 配置资源使用的文件系统。
 func WithClasspathFS(filesystem fs.FS) Option {
 	return func(settings *settings) { settings.classpathFS = filesystem }
+}
+
+// WithStructuredJSONCustomizers 注册显式、类型安全的结构化 JSON 定制器。
+func WithStructuredJSONCustomizers(customizers ...goarklog.StructuredJSONCustomizer) Option {
+	copied := append([]goarklog.StructuredJSONCustomizer(nil), customizers...)
+	return func(settings *settings) { settings.customizers = copied }
 }

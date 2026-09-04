@@ -43,16 +43,20 @@ func newSettings(environment coreenv.Environment, options []Option) (settings, e
 			return settings{}, err
 		}
 		resolved.factory = func(ctx context.Context, environment coreenv.Environment) (*goarklog.LoggerContext, error) {
-			return defaultLoggerContextFactory(ctx, environment, loader)
+			return defaultLoggerContextFactory(ctx, environment, loader, resolved.customizers)
 		}
 	}
 	return resolved, nil
 }
 
-func defaultLoggerContextFactory(ctx context.Context, environment coreenv.Environment, loader coreresource.Loader) (*goarklog.LoggerContext, error) {
+func defaultLoggerContextFactory(ctx context.Context, environment coreenv.Environment, loader coreresource.Loader, customizerGroups ...[]goarklog.StructuredJSONCustomizer) (*goarklog.LoggerContext, error) {
+	var customizers []goarklog.StructuredJSONCustomizer
+	if len(customizerGroups) > 0 {
+		customizers = customizerGroups[0]
+	}
 	loadOptions := []goarklog.ConfigLoadOption{
 		goarklog.WithBootPropertyResolver(environment),
-		goarklog.WithOptionsCustomizer(loggingOptionsCustomizer(environment)),
+		goarklog.WithOptionsCustomizer(loggingOptionsCustomizer(environment, customizers)),
 	}
 	resourceOption, err := configResourceOption(ctx, environment, loader)
 	if err != nil {

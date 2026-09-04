@@ -34,6 +34,7 @@ func Read(environment coreenv.Environment) (Properties, error) {
 	properties.Structured.JSON.Include = splitNonEmpty(optionalString(environment, StructuredJSONInclude))
 	properties.Structured.JSON.Exclude = splitNonEmpty(optionalString(environment, StructuredJSONExclude))
 	properties.Structured.JSON.ContextPrefix = optionalString(environment, StructuredContextPrefix)
+	properties.Structured.JSON.Customizers = splitNonEmpty(optionalString(environment, StructuredJSONCustomizer))
 	properties.Structured.JSON.Stacktrace.Printer = optionalString(environment, StacktracePrinter)
 	properties.Structured.JSON.Stacktrace.Root = optionalString(environment, StacktraceRoot)
 	properties.Structured.ECS.ServiceEnvironment = optionalString(environment, ECSServiceEnvironment)
@@ -41,6 +42,7 @@ func Read(environment coreenv.Environment) (Properties, error) {
 	properties.Structured.ECS.ServiceNodeName = optionalString(environment, ECSServiceNodeName)
 	properties.Structured.ECS.ServiceVersion = optionalString(environment, ECSServiceVersion)
 	properties.Structured.GELF.Host = optionalString(environment, GELFHost)
+	properties.Structured.GELF.ServiceName = optionalString(environment, GELFServiceName)
 	properties.Structured.GELF.ServiceVersion = optionalString(environment, GELFServiceVersion)
 
 	var err error
@@ -142,6 +144,9 @@ func firstNonEmpty(environment coreenv.Environment, keys ...string) string {
 }
 
 func validate(properties Properties) error {
+	if len(properties.Structured.JSON.Customizers) > 0 {
+		return fmt.Errorf("gbc-log: %q contains Java class names; register Go customizers with WithStructuredJSONCustomizers", StructuredJSONCustomizer)
+	}
 	for key, format := range map[string]string{
 		StructuredConsoleFormat: properties.Structured.ConsoleFormat,
 		StructuredFileFormat:    properties.Structured.FileFormat,

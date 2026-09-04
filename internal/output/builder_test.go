@@ -91,7 +91,7 @@ func TestTextLayout_whenFileCharsetConfigured_shouldEncodeOutput(t *testing.T) {
 	}
 	configuration.FilePattern = "%msg"
 	configuration.FileCharset = "ISO-8859-1"
-	layout, err := textLayout(configuration, true)
+	layout, err := outputLayout(configuration, true, nil)
 	if err != nil {
 		t.Fatalf("textLayout() error = %v", err)
 	}
@@ -110,10 +110,47 @@ func TestTextLayout_whenCharsetUnknown_shouldFail(t *testing.T) {
 		t.Fatalf("Read(nil) error = %v", err)
 	}
 	configuration.ConsoleCharset = "unknown-charset"
-	if _, err := textLayout(configuration, false); err == nil {
+	if _, err := outputLayout(configuration, false, nil); err == nil {
 		t.Fatal("unknown charset should fail")
 	}
 }
+
+func TestOutputLayout_whenStructuredFormatConfigured_shouldMapProperties(t *testing.T) {
+	configuration, err := properties.Read(nil)
+	if err != nil {
+		t.Fatalf("Read(nil) error = %v", err)
+	}
+	configuration.Structured.ConsoleFormat = "ecs"
+	configuration.ApplicationName = "admin"
+	configuration.Structured.ECS.ServiceVersion = "1.0.0"
+	configuration.Structured.JSON.ContextInclude = boolPointer(true)
+	configuration.Structured.JSON.ContextPrefix = "ctx."
+	configuration.Structured.JSON.Add["build"] = "42"
+	configuration.Structured.JSON.Rename["message"] = "msg"
+	layout, err := outputLayout(configuration, false, []goarklog.StructuredJSONCustomizer{
+		goarklog.StructuredJSONCustomizerFunc(func(_ goarklog.Event, fields goarklog.StructuredJSONFieldAppender) {
+			fields.Add("custom", slog.StringValue("ok"))
+		}),
+	})
+	if err != nil {
+		t.Fatalf("outputLayout() error = %v", err)
+	}
+	var output bytes.Buffer
+	if err := layout.Format(&output, goarklog.Event{
+		Time: time.Date(2026, 9, 4, 10, 0, 0, 0, time.UTC), Logger: "admin", Message: "started",
+		Attrs: []slog.Attr{slog.String("trace", "trace-1")},
+	}); err != nil {
+		t.Fatalf("Format() error = %v", err)
+	}
+	text := output.String()
+	for _, wanted := range []string{`"service":{"name":"admin","version":"1.0.0"}`, `"msg":"started"`, `"ctx.trace":"trace-1"`, `"build":"42"`, `"custom":"ok"`} {
+		if !strings.Contains(text, wanted) {
+			t.Fatalf("structured output %q does not contain %q", text, wanted)
+		}
+	}
+}
+
+func boolPointer(value bool) *bool { return &value }
 
 func closeAppenders(t *testing.T, appenders []goarklog.Appender) {
 	t.Helper()

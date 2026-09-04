@@ -11,14 +11,18 @@ import (
 	goarklog "goark.dev/log"
 )
 
-func loggingOptionsCustomizer(environment coreenv.Environment) goarklog.OptionsCustomizer {
+func loggingOptionsCustomizer(environment coreenv.Environment, customizerGroups ...[]goarklog.StructuredJSONCustomizer) goarklog.OptionsCustomizer {
+	var customizers []goarklog.StructuredJSONCustomizer
+	if len(customizerGroups) > 0 {
+		customizers = customizerGroups[0]
+	}
 	return func(_ context.Context, current goarklog.Options, source *goarklog.ConfigResult) (goarklog.Options, error) {
 		properties, err := readLoggingProperties(environment)
 		if err != nil {
 			return current, err
 		}
 		if source != nil && source.Source == goarklog.ConfigSourceDefault {
-			if current, err = internaloutput.ApplyDefault(current, properties); err != nil {
+			if current, err = internaloutput.ApplyDefault(current, properties, customizers...); err != nil {
 				return current, err
 			}
 		}
