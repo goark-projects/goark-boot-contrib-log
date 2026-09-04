@@ -56,8 +56,40 @@ func TestAutoConfigureDisabledKeepsExistingLogger(t *testing.T) {
 	if logger != previous {
 		t.Fatal("disabled starter replaced existing logger")
 	}
+	system := goark.MustGet[gbclog.LoggingSystem](t.Context(), appContext, gbclog.BeanNameSystem)
+	level := slog.LevelDebug
+	if err := system.SetLogLevel("admin", &level); err == nil {
+		t.Fatal("disabled LoggingSystem accepted level change")
+	}
 	if err := app.Close(t.Context()); err != nil {
 		t.Fatalf("Close: %v", err)
+	}
+}
+
+func TestLoggingSystemChangesAndRestoresLoggerLevel(t *testing.T) {
+	app, err := boot.Run(t.Context(), boot.WithAutoConfiguration(gbclog.AutoConfigure()))
+	if err != nil {
+		t.Fatalf("boot.Run: %v", err)
+	}
+	defer func() { _ = app.Close(t.Context()) }()
+	appContext, _ := app.Context()
+	system := goark.MustGet[gbclog.LoggingSystem](t.Context(), appContext, gbclog.BeanNameSystem)
+	level := slog.LevelDebug
+	if err := system.SetLogLevel("admin.service", &level); err != nil {
+		t.Fatalf("SetLogLevel(debug) error = %v", err)
+	}
+	configuration, found := system.LogLevel("admin.service")
+	if !found || configuration.ConfiguredLevel == nil || *configuration.ConfiguredLevel != slog.LevelDebug || configuration.EffectiveLevel != slog.LevelDebug {
+		t.Fatalf("logger configuration = %#v, found=%v", configuration, found)
+	}
+	if err := system.SetLogLevel("admin.service", nil); err != nil {
+		t.Fatalf("SetLogLevel(nil) error = %v", err)
+	}
+	if _, found := system.LogLevel("admin.service"); found {
+		t.Fatal("restored dynamic logger should no longer be explicitly configured")
+	}
+	if root, found := system.LogLevel("root"); !found || root.Name != "ROOT" {
+		t.Fatalf("root configuration = %#v, found=%v", root, found)
 	}
 }
 

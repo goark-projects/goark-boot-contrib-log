@@ -58,6 +58,11 @@ func (c configuration) RegisterWithContext(_ context.Context, config appcontext.
 	}, goarkcontainer.WithDependsOn(BeanNameLifecycle), goarkcontainer.WithPrimary()); err != nil {
 		return err
 	}
+	if err := goarkcontainer.Register[LoggingSystem](config.Registry(), BeanNameSystem, func(ctx context.Context, resolver goarkcontainer.Resolver) (LoggingSystem, error) {
+		return goarkcontainer.Get[*Runtime](ctx, resolver, BeanNameLifecycle)
+	}, goarkcontainer.WithDependsOn(BeanNameLifecycle)); err != nil {
+		return err
+	}
 	if !*resolved.enabled {
 		return nil
 	}

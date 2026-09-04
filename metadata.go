@@ -13,6 +13,8 @@ const (
 	BeanNameLogger = "goark.log.logger"
 	// BeanNameLifecycle 是日志运行期生命周期 Bean 名称。
 	BeanNameLifecycle = "goark.log.lifecycle"
+	// BeanNameSystem 是日志运行时控制面 Bean 名称。
+	BeanNameSystem = "goark.log.system"
 )
 
 const (

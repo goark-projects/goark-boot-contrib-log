@@ -11,6 +11,7 @@ func TestModuleMetadata(t *testing.T) {
 		{name: "module path", got: ModulePath, want: "goark.dev/gbc-log"},
 		{name: "repository", got: Repository, want: "goark-boot-contrib-log"},
 		{name: "starter id", got: StarterID, want: "goark.boot.log"},
+		{name: "system bean", got: BeanNameSystem, want: "goark.log.system"},
 	}
 
 	for _, tt := range tests {
