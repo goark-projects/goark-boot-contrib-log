@@ -13,12 +13,13 @@ import (
 type LoggerContextFactory func(ctx context.Context, environment coreenv.Environment) (*goarklog.LoggerContext, error)
 
 type settings struct {
-	enabled        *bool
-	installDefault *bool
-	factory        LoggerContextFactory
-	resourceLoader coreresource.Loader
-	classpathFS    fs.FS
-	customizers    []goarklog.StructuredJSONCustomizer
+	enabled         *bool
+	installDefault  *bool
+	factory         LoggerContextFactory
+	resourceLoader  coreresource.Loader
+	classpathFS     fs.FS
+	customizers     []goarklog.StructuredJSONCustomizer
+	manageLifecycle bool
 }
 
 // Option 调整日志自动配置。

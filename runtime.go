@@ -14,6 +14,7 @@ type Runtime struct {
 	logger          *slog.Logger
 	previousDefault *slog.Logger
 	installed       bool
+	manageLifecycle bool
 	closeOnce       sync.Once
 	closeErr        error
 }
@@ -46,7 +47,7 @@ func (r *Runtime) Close() error {
 		if r.installed && slog.Default() == r.logger && r.previousDefault != nil {
 			slog.SetDefault(r.previousDefault)
 		}
-		if r.context != nil {
+		if r.context != nil && r.manageLifecycle {
 			r.closeErr = r.context.Close()
 		}
 	})

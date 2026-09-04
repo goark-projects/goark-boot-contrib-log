@@ -11,7 +11,7 @@ import (
 )
 
 func newSettings(environment coreenv.Environment, options []Option) (settings, error) {
-	resolved := settings{}
+	resolved := settings{manageLifecycle: true}
 	if environment != nil {
 		enabled, err := coreenv.ResolveValueAs[bool](environment, "${"+PropertyEnabled+":true}")
 		if err != nil {
@@ -23,6 +23,11 @@ func newSettings(environment coreenv.Environment, options []Option) (settings, e
 		}
 		resolved.enabled = &enabled
 		resolved.installDefault = &installDefault
+		properties, err := readLoggingProperties(environment)
+		if err != nil {
+			return settings{}, err
+		}
+		resolved.manageLifecycle = properties.RegisterShutdownHook
 	}
 	for _, option := range options {
 		if option != nil {

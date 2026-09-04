@@ -40,7 +40,7 @@ func (c configuration) RegisterWithContext(_ context.Context, config appcontext.
 			return nil, err
 		}
 		logger := loggerContext.Logger("goark")
-		runtime := &Runtime{context: loggerContext, logger: logger, previousDefault: previous}
+		runtime := &Runtime{context: loggerContext, logger: logger, previousDefault: previous, manageLifecycle: resolved.manageLifecycle}
 		if *resolved.installDefault {
 			slog.SetDefault(logger)
 			runtime.installed = true
@@ -72,5 +72,5 @@ func (c configuration) RegisterWithContext(_ context.Context, config appcontext.
 			return nil, err
 		}
 		return runtime.Context(), nil
-	}, goarkcontainer.WithDependsOn(BeanNameLifecycle))
+	}, goarkcontainer.WithDependsOn(BeanNameLifecycle), goarkcontainer.WithLifecycleManaged(false))
 }

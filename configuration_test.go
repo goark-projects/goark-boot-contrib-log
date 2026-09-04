@@ -99,6 +99,33 @@ func TestRuntimeOrderKeepsLoggerAliveThroughProviderShutdown(t *testing.T) {
 	}
 }
 
+func TestAutoConfigure_whenShutdownHookDisabled_shouldLeaveContextOpen(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "app.yml"), []byte("logging:\n  register-shutdown-hook: false\n"), 0o644); err != nil {
+		t.Fatalf("write app config failed: %v", err)
+	}
+	app, err := boot.Run(
+		t.Context(),
+		boot.WithConfigDataOptions(configdata.WithLocations(root)),
+		boot.WithAutoConfiguration(gbclog.AutoConfigure()),
+	)
+	if err != nil {
+		t.Fatalf("boot.Run: %v", err)
+	}
+	appContext, _ := app.Context()
+	loggerContext := goark.MustGet[*goarklog.LoggerContext](t.Context(), appContext, gbclog.BeanNameContext)
+	if err := app.Close(t.Context()); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	level := slog.LevelDebug
+	if err := loggerContext.SetLevel("admin", &level); err != nil {
+		t.Fatalf("unmanaged logger context was closed: %v", err)
+	}
+	if err := loggerContext.Close(); err != nil {
+		t.Fatalf("manual logger context close: %v", err)
+	}
+}
+
 func TestAutoConfigure_whenLoggingPropertiesExist_shouldWriteConfiguredNamedLogger(t *testing.T) {
 	root := t.TempDir()
 	logFile := filepath.Join(root, "admin.log")
