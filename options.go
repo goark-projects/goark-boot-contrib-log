@@ -2,8 +2,10 @@ package gbclog
 
 import (
 	"context"
+	"io/fs"
 
 	coreenv "goark.dev/goark/core/env"
+	coreresource "goark.dev/goark/core/resource"
 	goarklog "goark.dev/log"
 )
 
@@ -14,6 +16,8 @@ type settings struct {
 	enabled        *bool
 	installDefault *bool
 	factory        LoggerContextFactory
+	resourceLoader coreresource.Loader
+	classpathFS    fs.FS
 }
 
 // Option 调整日志自动配置。
@@ -32,4 +36,14 @@ func WithInstallDefault(enabled bool) Option {
 // WithLoggerContextFactory 替换日志运行期工厂，主要用于自定义 Appender 或测试。
 func WithLoggerContextFactory(factory LoggerContextFactory) Option {
 	return func(settings *settings) { settings.factory = factory }
+}
+
+// WithResourceLoader 设置 logging.config 使用的资源加载器。
+func WithResourceLoader(loader coreresource.Loader) Option {
+	return func(settings *settings) { settings.resourceLoader = loader }
+}
+
+// WithClasspathFS 注册 classpath: 配置资源使用的文件系统。
+func WithClasspathFS(filesystem fs.FS) Option {
+	return func(settings *settings) { settings.classpathFS = filesystem }
 }
