@@ -84,6 +84,37 @@ func TestDefaultPattern_shouldRenderConfiguredIdentityAndGoarkDateFormat(t *test
 	}
 }
 
+func TestTextLayout_whenFileCharsetConfigured_shouldEncodeOutput(t *testing.T) {
+	configuration, err := properties.Read(nil)
+	if err != nil {
+		t.Fatalf("Read(nil) error = %v", err)
+	}
+	configuration.FilePattern = "%msg"
+	configuration.FileCharset = "ISO-8859-1"
+	layout, err := textLayout(configuration, true)
+	if err != nil {
+		t.Fatalf("textLayout() error = %v", err)
+	}
+	var output bytes.Buffer
+	if err := layout.Format(&output, goarklog.Event{Message: "caf\u00e9"}); err != nil {
+		t.Fatalf("Format() error = %v", err)
+	}
+	if !bytes.Equal(output.Bytes(), []byte{'c', 'a', 'f', 0xe9}) {
+		t.Fatalf("encoded output = %v", output.Bytes())
+	}
+}
+
+func TestTextLayout_whenCharsetUnknown_shouldFail(t *testing.T) {
+	configuration, err := properties.Read(nil)
+	if err != nil {
+		t.Fatalf("Read(nil) error = %v", err)
+	}
+	configuration.ConsoleCharset = "unknown-charset"
+	if _, err := textLayout(configuration, false); err == nil {
+		t.Fatal("unknown charset should fail")
+	}
+}
+
 func closeAppenders(t *testing.T, appenders []goarklog.Appender) {
 	t.Helper()
 	for _, appender := range appenders {

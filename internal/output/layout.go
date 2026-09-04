@@ -20,5 +20,13 @@ func textLayout(configuration properties.Properties, file bool) (goarklog.Layout
 	if err != nil {
 		return nil, fmt.Errorf("gbc-log: compile logging pattern: %w", err)
 	}
-	return layout, nil
+	charset := configuration.ConsoleCharset
+	if file {
+		charset = configuration.FileCharset
+	}
+	encoded, err := goarklog.NewCharsetLayout(layout, charset)
+	if err != nil {
+		return nil, fmt.Errorf("gbc-log: configure logging charset: %w", err)
+	}
+	return encoded, nil
 }
