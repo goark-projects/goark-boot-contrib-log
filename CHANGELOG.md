@@ -19,6 +19,10 @@ No unreleased changes.
   and one lifecycle owner for logging shutdown.
 - Cross-platform CI with Go 1.26 tests, vet, and race gates.
 
+### Changed
+
+- Aligned all used `golang.org/x` modules with their latest stable releases.
+
 ### Fixed
 
 - Logging remains available until telemetry and application shutdown complete.
