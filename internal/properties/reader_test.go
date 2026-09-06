@@ -12,10 +12,13 @@ func TestRead_whenEnvironmentIsNil_shouldReturnGoarkDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Read(nil) error = %v", err)
 	}
-	if !properties.ConsoleEnabled || !properties.IncludeApplicationName || !properties.IncludeApplicationGroup || !properties.RegisterShutdownHook {
+	if !properties.ConsoleEnabled || !properties.IncludeApplicationName ||
+		!properties.IncludeApplicationGroup ||
+		!properties.RegisterShutdownHook {
 		t.Fatalf("boolean defaults = %#v", properties)
 	}
-	if properties.DateFormatPattern != DefaultDateFormat || properties.LevelPattern != DefaultLevelPattern {
+	if properties.DateFormatPattern != DefaultDateFormat ||
+		properties.LevelPattern != DefaultLevelPattern {
 		t.Fatalf("pattern defaults = %q, %q", properties.DateFormatPattern, properties.LevelPattern)
 	}
 	if properties.MaxFileSize != 10_000_000 || properties.MaxHistory != 7 {
@@ -23,7 +26,11 @@ func TestRead_whenEnvironmentIsNil_shouldReturnGoarkDefaults(t *testing.T) {
 	}
 	if properties.ConsoleThreshold == nil || *properties.ConsoleThreshold != slog.Level(-8) ||
 		properties.FileThreshold == nil || *properties.FileThreshold != slog.Level(-8) {
-		t.Fatalf("threshold defaults = %v, %v", properties.ConsoleThreshold, properties.FileThreshold)
+		t.Fatalf(
+			"threshold defaults = %v, %v",
+			properties.ConsoleThreshold,
+			properties.FileThreshold,
+		)
 	}
 }
 

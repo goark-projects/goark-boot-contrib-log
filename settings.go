@@ -17,7 +17,10 @@ func newSettings(environment coreenv.Environment, options []Option) (settings, e
 		if err != nil {
 			return settings{}, err
 		}
-		installDefault, err := coreenv.ResolveValueAs[bool](environment, "${"+PropertyInstallDefault+":true}")
+		installDefault, err := coreenv.ResolveValueAs[bool](
+			environment,
+			"${"+PropertyInstallDefault+":true}",
+		)
 		if err != nil {
 			return settings{}, err
 		}
@@ -47,14 +50,22 @@ func newSettings(environment coreenv.Environment, options []Option) (settings, e
 		if err != nil {
 			return settings{}, err
 		}
-		resolved.factory = func(ctx context.Context, environment coreenv.Environment) (*log.LoggerContext, error) {
+		resolved.factory = func(
+			ctx context.Context,
+			environment coreenv.Environment,
+		) (*log.LoggerContext, error) {
 			return defaultLoggerContextFactory(ctx, environment, loader, resolved.customizers)
 		}
 	}
 	return resolved, nil
 }
 
-func defaultLoggerContextFactory(ctx context.Context, environment coreenv.Environment, loader coreresource.Loader, customizerGroups ...[]log.StructuredJSONCustomizer) (*log.LoggerContext, error) {
+func defaultLoggerContextFactory(
+	ctx context.Context,
+	environment coreenv.Environment,
+	loader coreresource.Loader,
+	customizerGroups ...[]log.StructuredJSONCustomizer,
+) (*log.LoggerContext, error) {
 	var customizers []log.StructuredJSONCustomizer
 	if len(customizerGroups) > 0 {
 		customizers = customizerGroups[0]
@@ -92,7 +103,11 @@ func defaultResourceLoader(configuration settings) (coreresource.Loader, error) 
 	return loader, nil
 }
 
-func configResourceOption(ctx context.Context, environment coreenv.Environment, loader coreresource.Loader) (log.ConfigLoadOption, error) {
+func configResourceOption(
+	ctx context.Context,
+	environment coreenv.Environment,
+	loader coreresource.Loader,
+) (log.ConfigLoadOption, error) {
 	if environment == nil {
 		return nil, nil
 	}

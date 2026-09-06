@@ -11,12 +11,19 @@ import (
 	"goark.dev/log"
 )
 
-func loggingOptionsCustomizer(environment coreenv.Environment, customizerGroups ...[]log.StructuredJSONCustomizer) log.OptionsCustomizer {
+func loggingOptionsCustomizer(
+	environment coreenv.Environment,
+	customizerGroups ...[]log.StructuredJSONCustomizer,
+) log.OptionsCustomizer {
 	var customizers []log.StructuredJSONCustomizer
 	if len(customizerGroups) > 0 {
 		customizers = customizerGroups[0]
 	}
-	return func(_ context.Context, current log.Options, source *log.ConfigResult) (log.Options, error) {
+	return func(
+		_ context.Context,
+		current log.Options,
+		source *log.ConfigResult,
+	) (log.Options, error) {
 		properties, err := readLoggingProperties(environment)
 		if err != nil {
 			return current, err
@@ -47,7 +54,10 @@ func applyLoggerLevels(options *log.Options, properties loggingProperties) {
 			options.Loggers[index].Level = levelPointer(level)
 			continue
 		}
-		options.Loggers = append(options.Loggers, log.LoggerRule{Name: name, Level: levelPointer(level)})
+		options.Loggers = append(
+			options.Loggers,
+			log.LoggerRule{Name: name, Level: levelPointer(level)},
+		)
 	}
 }
 
@@ -60,17 +70,34 @@ func applyAppenderThreshold(options *log.Options, wanted string, level *slog.Lev
 		return
 	}
 	if len(options.Root.AppenderRefs) == 0 && len(options.Root.AppenderRefControls) == 0 &&
-		len(options.Appenders) > 0 && options.Appenders[0] != nil && strings.EqualFold(options.Appenders[0].Name(), name) {
+		len(
+			options.Appenders,
+		) > 0 && options.Appenders[0] != nil && strings.EqualFold(options.Appenders[0].Name(), name) {
 		options.Root.AppenderRefControls = append(options.Root.AppenderRefControls,
 			log.NewAppenderRef(name, log.WithAppenderRefLevel(*level)))
 	}
-	applyReferenceThreshold(&options.Root.AppenderRefs, &options.Root.AppenderRefControls, name, *level)
+	applyReferenceThreshold(
+		&options.Root.AppenderRefs,
+		&options.Root.AppenderRefControls,
+		name,
+		*level,
+	)
 	for index := range options.Loggers {
-		applyReferenceThreshold(&options.Loggers[index].AppenderRefs, &options.Loggers[index].AppenderRefControls, name, *level)
+		applyReferenceThreshold(
+			&options.Loggers[index].AppenderRefs,
+			&options.Loggers[index].AppenderRefControls,
+			name,
+			*level,
+		)
 	}
 }
 
-func applyReferenceThreshold(refs *[]string, controls *[]log.AppenderRef, name string, level slog.Level) {
+func applyReferenceThreshold(
+	refs *[]string,
+	controls *[]log.AppenderRef,
+	name string,
+	level slog.Level,
+) {
 	hadSimpleRef := containsAppenderRef(*refs, name)
 	*refs = removeAppenderRef(*refs, name)
 	for index := range *controls {

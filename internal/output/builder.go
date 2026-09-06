@@ -10,7 +10,11 @@ import (
 )
 
 // ApplyDefault 使用 Boot 属性替换 goark-log 的默认输出端。
-func ApplyDefault(options log.Options, configuration properties.Properties, customizers ...log.StructuredJSONCustomizer) (log.Options, error) {
+func ApplyDefault(
+	options log.Options,
+	configuration properties.Properties,
+	customizers ...log.StructuredJSONCustomizer,
+) (log.Options, error) {
 	appenders := make([]log.Appender, 0, 2)
 	refs := make([]string, 0, 2)
 	if configuration.ConsoleEnabled {
@@ -53,7 +57,11 @@ func resolvedFileName(configuration properties.Properties) string {
 	return ""
 }
 
-func newRollingFileAppender(fileName string, configuration properties.Properties, customizers []log.StructuredJSONCustomizer) (*log.RollingFileAppender, error) {
+func newRollingFileAppender(
+	fileName string,
+	configuration properties.Properties,
+	customizers []log.StructuredJSONCustomizer,
+) (*log.RollingFileAppender, error) {
 	layout, err := outputLayout(configuration, true, customizers)
 	if err != nil {
 		return nil, err

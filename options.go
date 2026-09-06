@@ -10,7 +10,10 @@ import (
 )
 
 // LoggerContextFactory 创建由 Starter 管理的 goark-log 运行期。
-type LoggerContextFactory func(ctx context.Context, environment coreenv.Environment) (*log.LoggerContext, error)
+type LoggerContextFactory func(
+	ctx context.Context,
+	environment coreenv.Environment,
+) (*log.LoggerContext, error)
 
 type settings struct {
 	enabled         *bool

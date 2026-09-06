@@ -8,7 +8,11 @@ import (
 	"goark.dev/log"
 )
 
-func outputLayout(configuration properties.Properties, file bool, customizers []log.StructuredJSONCustomizer) (log.Layout, error) {
+func outputLayout(
+	configuration properties.Properties,
+	file bool,
+	customizers []log.StructuredJSONCustomizer,
+) (log.Layout, error) {
 	format := configuration.Structured.ConsoleFormat
 	if file {
 		format = configuration.Structured.FileFormat
@@ -49,7 +53,11 @@ func textLayout(configuration properties.Properties, file bool) (log.Layout, err
 	return layout, nil
 }
 
-func structuredLayout(configuration properties.Properties, format string, customizers []log.StructuredJSONCustomizer) (log.Layout, error) {
+func structuredLayout(
+	configuration properties.Properties,
+	format string,
+	customizers []log.StructuredJSONCustomizer,
+) (log.Layout, error) {
 	includeContext := true
 	if configured := configuration.Structured.JSON.ContextInclude; configured != nil {
 		includeContext = *configured
@@ -73,12 +81,18 @@ func structuredLayout(configuration properties.Properties, format string, custom
 		},
 		ECS: log.StructuredECSOptions{
 			ServiceEnvironment: configuration.Structured.ECS.ServiceEnvironment,
-			ServiceName:        firstText(configuration.Structured.ECS.ServiceName, configuration.ApplicationName),
-			ServiceNodeName:    configuration.Structured.ECS.ServiceNodeName,
-			ServiceVersion:     configuration.Structured.ECS.ServiceVersion,
+			ServiceName: firstText(
+				configuration.Structured.ECS.ServiceName,
+				configuration.ApplicationName,
+			),
+			ServiceNodeName: configuration.Structured.ECS.ServiceNodeName,
+			ServiceVersion:  configuration.Structured.ECS.ServiceVersion,
 		},
 		GELF: log.StructuredGELFOptions{
-			Host:           firstText(configuration.Structured.GELF.Host, configuration.ApplicationName),
+			Host: firstText(
+				configuration.Structured.GELF.Host,
+				configuration.ApplicationName,
+			),
 			ServiceVersion: configuration.Structured.GELF.ServiceVersion,
 		},
 		Customizers: customizers,
@@ -90,13 +104,17 @@ func structuredLayout(configuration properties.Properties, format string, custom
 	return layout, nil
 }
 
-func structuredStacktracePrinter(stacktrace properties.StacktraceProperties) log.StructuredStacktracePrinter {
+func structuredStacktracePrinter(
+	stacktrace properties.StacktraceProperties,
+) log.StructuredStacktracePrinter {
 	printer := strings.ToLower(strings.TrimSpace(stacktrace.Printer))
 	if printer == "logging-system" {
 		return log.StructuredStacktracePrinterLoggingSystem
 	}
-	if printer == "standard" || strings.TrimSpace(stacktrace.Root) != "" || stacktrace.MaxLength != nil ||
-		stacktrace.MaxThrowableDepth != nil || stacktrace.IncludeCommonFrames != nil || stacktrace.IncludeHashes != nil {
+	if printer == "standard" || strings.TrimSpace(stacktrace.Root) != "" ||
+		stacktrace.MaxLength != nil ||
+		stacktrace.MaxThrowableDepth != nil || stacktrace.IncludeCommonFrames != nil ||
+		stacktrace.IncludeHashes != nil {
 		return log.StructuredStacktracePrinterStandard
 	}
 	return log.StructuredStacktracePrinterLoggingSystem

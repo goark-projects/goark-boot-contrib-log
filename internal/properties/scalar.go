@@ -70,7 +70,11 @@ func optionalInt(environment coreenv.Environment, key string) (*int, error) {
 	return &parsed, nil
 }
 
-func dataSizeWithDefault(environment coreenv.Environment, key string, fallback int64) (int64, error) {
+func dataSizeWithDefault(
+	environment coreenv.Environment,
+	key string,
+	fallback int64,
+) (int64, error) {
 	value, found := environment.GetProperty(key)
 	if !found {
 		return fallback, nil
@@ -94,7 +98,11 @@ func optionalLevel(environment coreenv.Environment, key string) (*slog.Level, er
 	return &level, nil
 }
 
-func levelWithDefault(environment coreenv.Environment, key string, fallback slog.Level) (*slog.Level, error) {
+func levelWithDefault(
+	environment coreenv.Environment,
+	key string,
+	fallback slog.Level,
+) (*slog.Level, error) {
 	level, err := optionalLevel(environment, key)
 	if err != nil {
 		return nil, err

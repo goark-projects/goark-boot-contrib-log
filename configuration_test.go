@@ -21,12 +21,19 @@ func TestAutoConfigureInstallsLoggerAndClosesContext(t *testing.T) {
 	var output bytes.Buffer
 	previous := slog.Default()
 	app, err := boot.Run(t.Context(), boot.WithAutoConfiguration(gbclog.AutoConfigure(
-		gbclog.WithLoggerContextFactory(func(context.Context, coreenv.Environment) (*log.LoggerContext, error) {
-			return log.NewLoggerContext(log.Options{
-				Appenders: []log.Appender{log.NewConsoleAppender(log.WithConsoleWriter(&output))},
-				Root:      log.RootLogger{Level: slog.LevelInfo, AppenderRefs: []string{"console"}},
-			})
-		}),
+		gbclog.WithLoggerContextFactory(
+			func(context.Context, coreenv.Environment) (*log.LoggerContext, error) {
+				return log.NewLoggerContext(log.Options{
+					Appenders: []log.Appender{
+						log.NewConsoleAppender(log.WithConsoleWriter(&output)),
+					},
+					Root: log.RootLogger{
+						Level:        slog.LevelInfo,
+						AppenderRefs: []string{"console"},
+					},
+				})
+			},
+		),
 	)))
 	if err != nil {
 		t.Fatalf("boot.Run: %v", err)
@@ -47,7 +54,10 @@ func TestAutoConfigureInstallsLoggerAndClosesContext(t *testing.T) {
 
 func TestAutoConfigureDisabledKeepsExistingLogger(t *testing.T) {
 	previous := slog.Default()
-	app, err := boot.Run(t.Context(), boot.WithAutoConfiguration(gbclog.AutoConfigure(gbclog.WithEnabled(false))))
+	app, err := boot.Run(
+		t.Context(),
+		boot.WithAutoConfiguration(gbclog.AutoConfigure(gbclog.WithEnabled(false))),
+	)
 	if err != nil {
 		t.Fatalf("boot.Run: %v", err)
 	}
@@ -79,7 +89,9 @@ func TestLoggingSystemChangesAndRestoresLoggerLevel(t *testing.T) {
 		t.Fatalf("SetLogLevel(debug) error = %v", err)
 	}
 	configuration, found := system.LogLevel("admin.service")
-	if !found || configuration.ConfiguredLevel == nil || *configuration.ConfiguredLevel != slog.LevelDebug || configuration.EffectiveLevel != slog.LevelDebug {
+	if !found || configuration.ConfiguredLevel == nil ||
+		*configuration.ConfiguredLevel != slog.LevelDebug ||
+		configuration.EffectiveLevel != slog.LevelDebug {
 		t.Fatalf("logger configuration = %#v, found=%v", configuration, found)
 	}
 	if err := system.SetLogLevel("admin.service", nil); err != nil {
@@ -101,7 +113,8 @@ func TestRuntimeOrderKeepsLoggerAliveThroughProviderShutdown(t *testing.T) {
 
 func TestAutoConfigure_whenShutdownHookDisabled_shouldLeaveContextOpen(t *testing.T) {
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "app.yml"), []byte("logging:\n  register-shutdown-hook: false\n"), 0o644); err != nil {
+	content := []byte("logging:\n  register-shutdown-hook: false\n")
+	if err := os.WriteFile(filepath.Join(root, "app.yml"), content, 0o644); err != nil {
 		t.Fatalf("write app config failed: %v", err)
 	}
 	app, err := boot.Run(
@@ -113,7 +126,11 @@ func TestAutoConfigure_whenShutdownHookDisabled_shouldLeaveContextOpen(t *testin
 		t.Fatalf("boot.Run: %v", err)
 	}
 	appContext, _ := app.Context()
-	loggerContext := goark.MustGet[*log.LoggerContext](t.Context(), appContext, gbclog.BeanNameContext)
+	loggerContext := goark.MustGet[*log.LoggerContext](
+		t.Context(),
+		appContext,
+		gbclog.BeanNameContext,
+	)
 	if err := app.Close(t.Context()); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
@@ -150,7 +167,11 @@ func TestAutoConfigure_whenLoggingPropertiesExist_shouldWriteConfiguredNamedLogg
 		t.Fatalf("boot.Run: %v", err)
 	}
 	appContext, _ := app.Context()
-	loggerContext := goark.MustGet[*log.LoggerContext](t.Context(), appContext, gbclog.BeanNameContext)
+	loggerContext := goark.MustGet[*log.LoggerContext](
+		t.Context(),
+		appContext,
+		gbclog.BeanNameContext,
+	)
 	loggerContext.Logger("admin.service").DebugContext(t.Context(), "named debug")
 	loggerContext.Logger("other.service").DebugContext(t.Context(), "root debug")
 	if err := app.Close(t.Context()); err != nil {

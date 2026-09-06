@@ -52,7 +52,11 @@ func TestLoggingOptionsCustomizer_whenDefaultSource_shouldBuildDefaultOutputs(t 
 		PropertyFileThreshold:    "error",
 	})
 	customize := loggingOptionsCustomizer(environment)
-	options, err := customize(context.Background(), log.DefaultOptions(), &log.ConfigResult{Source: log.ConfigSourceDefault})
+	options, err := customize(
+		context.Background(),
+		log.DefaultOptions(),
+		&log.ConfigResult{Source: log.ConfigSourceDefault},
+	)
 	if err != nil {
 		t.Fatalf("customize options failed: %v", err)
 	}
@@ -60,7 +64,8 @@ func TestLoggingOptionsCustomizer_whenDefaultSource_shouldBuildDefaultOutputs(t 
 	if options.Root.Level != slog.LevelDebug {
 		t.Fatalf("root level = %s, want DEBUG", options.Root.Level)
 	}
-	if len(options.Appenders) != 2 || options.Appenders[0].Name() != "console" || options.Appenders[1].Name() != "file" {
+	if len(options.Appenders) != 2 || options.Appenders[0].Name() != "console" ||
+		options.Appenders[1].Name() != "file" {
 		t.Fatalf("appenders = %#v, want console and file", options.Appenders)
 	}
 	if len(options.Root.AppenderRefControls) != 2 {
@@ -68,7 +73,9 @@ func TestLoggingOptionsCustomizer_whenDefaultSource_shouldBuildDefaultOutputs(t 
 	}
 }
 
-func TestLoggingOptionsCustomizer_whenFileConfigExists_shouldPreserveAppenderAndRouteFields(t *testing.T) {
+func TestLoggingOptionsCustomizer_whenFileConfigExists_shouldPreserveAppenderAndRouteFields(
+	t *testing.T,
+) {
 	console := log.NewConsoleAppender(log.WithConsoleName("CONSOLE"))
 	location := true
 	original := log.Options{
@@ -80,7 +87,14 @@ func TestLoggingOptionsCustomizer_whenFileConfigExists_shouldPreserveAppenderAnd
 				IncludeLocation: &location,
 			}},
 		},
-		Loggers: []log.LoggerRule{{Name: "example", Additivity: false, AdditivitySet: true, AppenderRefs: []string{"CONSOLE"}}},
+		Loggers: []log.LoggerRule{
+			{
+				Name:          "example",
+				Additivity:    false,
+				AdditivitySet: true,
+				AppenderRefs:  []string{"CONSOLE"},
+			},
+		},
 	}
 	environment := newLoggingEnvironment(t, map[string]any{
 		PropertyConsolePattern:          "%msg%n",
@@ -88,7 +102,11 @@ func TestLoggingOptionsCustomizer_whenFileConfigExists_shouldPreserveAppenderAnd
 		PropertyLevelPrefix + "example": "debug",
 	})
 	customize := loggingOptionsCustomizer(environment)
-	options, err := customize(context.Background(), original, &log.ConfigResult{Source: log.ConfigSourceExplicit})
+	options, err := customize(
+		context.Background(),
+		original,
+		&log.ConfigResult{Source: log.ConfigSourceExplicit},
+	)
 	if err != nil {
 		t.Fatalf("customize options failed: %v", err)
 	}
@@ -97,14 +115,18 @@ func TestLoggingOptionsCustomizer_whenFileConfigExists_shouldPreserveAppenderAnd
 		t.Fatal("explicit appender must be preserved")
 	}
 	control := options.Root.AppenderRefControls[0]
-	if control.IncludeLocation == nil || !*control.IncludeLocation || control.Level == nil || *control.Level != slog.LevelError {
+	if control.IncludeLocation == nil || !*control.IncludeLocation || control.Level == nil ||
+		*control.Level != slog.LevelError {
 		t.Fatalf("root control was not preserved with threshold override: %#v", control)
 	}
 	rule := options.Loggers[0]
-	if rule.Level == nil || *rule.Level != slog.LevelDebug || !rule.AdditivitySet || rule.Additivity {
+	if rule.Level == nil || *rule.Level != slog.LevelDebug || !rule.AdditivitySet ||
+		rule.Additivity {
 		t.Fatalf("logger route fields were not preserved: %#v", rule)
 	}
-	if len(rule.AppenderRefs) != 0 || len(rule.AppenderRefControls) != 1 || rule.AppenderRefControls[0].Level == nil || *rule.AppenderRefControls[0].Level != slog.LevelError {
+	if len(rule.AppenderRefs) != 0 || len(rule.AppenderRefControls) != 1 ||
+		rule.AppenderRefControls[0].Level == nil ||
+		*rule.AppenderRefControls[0].Level != slog.LevelError {
 		t.Fatalf("logger appender threshold was not applied: %#v", rule)
 	}
 }
@@ -127,7 +149,10 @@ func TestLoggingOptionsCustomizer_whenRootUsesImplicitAppender_shouldApplyThresh
 	}
 	defer closeAppenders(t, options.Appenders)
 	if len(options.Root.AppenderRefControls) != 1 {
-		t.Fatalf("root controls = %#v, want implicit appender threshold", options.Root.AppenderRefControls)
+		t.Fatalf(
+			"root controls = %#v, want implicit appender threshold",
+			options.Root.AppenderRefControls,
+		)
 	}
 	control := options.Root.AppenderRefControls[0]
 	if control.Ref != console.Name() || control.Level == nil || *control.Level != slog.LevelError {

@@ -143,7 +143,12 @@ func TestOutputLayout_whenStructuredFormatConfigured_shouldMapProperties(t *test
 		t.Fatalf("Format() error = %v", err)
 	}
 	text := output.String()
-	for _, wanted := range []string{`"service":{"name":"admin","version":"1.0.0"}`, `"msg":"started"`, `"ctx":{"trace":"trace-1"}`, `"build":"42"`, `"custom":"ok"`} {
+	wantedValues := []string{
+		`"service":{"name":"admin","version":"1.0.0"}`,
+		`"msg":"started"`, `"ctx":{"trace":"trace-1"}`,
+		`"build":"42"`, `"custom":"ok"`,
+	}
+	for _, wanted := range wantedValues {
 		if !strings.Contains(text, wanted) {
 			t.Fatalf("structured output %q does not contain %q", text, wanted)
 		}
@@ -151,16 +156,19 @@ func TestOutputLayout_whenStructuredFormatConfigured_shouldMapProperties(t *test
 }
 
 func TestStructuredStacktracePrinterMatchesBootDefaults(t *testing.T) {
-	if actual := structuredStacktracePrinter(properties.StacktraceProperties{}); actual != log.StructuredStacktracePrinterLoggingSystem {
+	actual := structuredStacktracePrinter(properties.StacktraceProperties{})
+	if actual != log.StructuredStacktracePrinterLoggingSystem {
 		t.Fatalf("default printer = %q", actual)
 	}
 	includeCommonFrames := false
 	configured := properties.StacktraceProperties{IncludeCommonFrames: &includeCommonFrames}
-	if actual := structuredStacktracePrinter(configured); actual != log.StructuredStacktracePrinterStandard {
+	actual = structuredStacktracePrinter(configured)
+	if actual != log.StructuredStacktracePrinterStandard {
 		t.Fatalf("configured printer = %q", actual)
 	}
 	configured.Printer = "logging-system"
-	if actual := structuredStacktracePrinter(configured); actual != log.StructuredStacktracePrinterLoggingSystem {
+	actual = structuredStacktracePrinter(configured)
+	if actual != log.StructuredStacktracePrinterLoggingSystem {
 		t.Fatalf("explicit logging-system printer = %q", actual)
 	}
 }

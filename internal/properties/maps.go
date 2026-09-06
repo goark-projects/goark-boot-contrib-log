@@ -16,7 +16,10 @@ var builtInGroups = map[string][]string{
 
 func readGroups(environment coreenv.Environment) (map[string][]string, error) {
 	groups := cloneGroups(builtInGroups)
-	values, found, err := coreenv.GetPropertyMapAsValue[string](environment, strings.TrimSuffix(GroupPrefix, "."))
+	values, found, err := coreenv.GetPropertyMapAsValue[string](
+		environment,
+		strings.TrimSuffix(GroupPrefix, "."),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("gbc-log: read logging groups: %w", err)
 	}
@@ -34,8 +37,14 @@ func readGroups(environment coreenv.Environment) (map[string][]string, error) {
 	return groups, nil
 }
 
-func readLevels(environment coreenv.Environment, groups map[string][]string) (map[string]slog.Level, error) {
-	values, found, err := coreenv.GetPropertyMapAsValue[string](environment, strings.TrimSuffix(LevelPrefix, "."))
+func readLevels(
+	environment coreenv.Environment,
+	groups map[string][]string,
+) (map[string]slog.Level, error) {
+	values, found, err := coreenv.GetPropertyMapAsValue[string](
+		environment,
+		strings.TrimSuffix(LevelPrefix, "."),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("gbc-log: read logger levels: %w", err)
 	}
