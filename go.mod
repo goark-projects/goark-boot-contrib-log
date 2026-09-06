@@ -1,6 +1,6 @@
 module goark.dev/gbc-log
 
-go 1.25
+go 1.26.0
 
 require (
 	goark.dev/boot v0.0.0-20260903174742-ca13efcd3a24
