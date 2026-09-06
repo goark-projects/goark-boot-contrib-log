@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	coreenv "goark.dev/goark/core/env"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 func TestReadLoggingProperties_whenLevelsAndGroupsExist_shouldResolveDirectLevelLast(t *testing.T) {
@@ -52,7 +52,7 @@ func TestLoggingOptionsCustomizer_whenDefaultSource_shouldBuildDefaultOutputs(t 
 		PropertyFileThreshold:    "error",
 	})
 	customize := loggingOptionsCustomizer(environment)
-	options, err := customize(context.Background(), goarklog.DefaultOptions(), &goarklog.ConfigResult{Source: goarklog.ConfigSourceDefault})
+	options, err := customize(context.Background(), log.DefaultOptions(), &log.ConfigResult{Source: log.ConfigSourceDefault})
 	if err != nil {
 		t.Fatalf("customize options failed: %v", err)
 	}
@@ -69,18 +69,18 @@ func TestLoggingOptionsCustomizer_whenDefaultSource_shouldBuildDefaultOutputs(t 
 }
 
 func TestLoggingOptionsCustomizer_whenFileConfigExists_shouldPreserveAppenderAndRouteFields(t *testing.T) {
-	console := goarklog.NewConsoleAppender(goarklog.WithConsoleName("CONSOLE"))
+	console := log.NewConsoleAppender(log.WithConsoleName("CONSOLE"))
 	location := true
-	original := goarklog.Options{
-		Appenders: []goarklog.Appender{console},
-		Root: goarklog.RootLogger{
+	original := log.Options{
+		Appenders: []log.Appender{console},
+		Root: log.RootLogger{
 			Level: slog.LevelInfo,
-			AppenderRefControls: []goarklog.AppenderRef{{
+			AppenderRefControls: []log.AppenderRef{{
 				Ref:             "CONSOLE",
 				IncludeLocation: &location,
 			}},
 		},
-		Loggers: []goarklog.LoggerRule{{Name: "example", Additivity: false, AdditivitySet: true, AppenderRefs: []string{"CONSOLE"}}},
+		Loggers: []log.LoggerRule{{Name: "example", Additivity: false, AdditivitySet: true, AppenderRefs: []string{"CONSOLE"}}},
 	}
 	environment := newLoggingEnvironment(t, map[string]any{
 		PropertyConsolePattern:          "%msg%n",
@@ -88,7 +88,7 @@ func TestLoggingOptionsCustomizer_whenFileConfigExists_shouldPreserveAppenderAnd
 		PropertyLevelPrefix + "example": "debug",
 	})
 	customize := loggingOptionsCustomizer(environment)
-	options, err := customize(context.Background(), original, &goarklog.ConfigResult{Source: goarklog.ConfigSourceExplicit})
+	options, err := customize(context.Background(), original, &log.ConfigResult{Source: log.ConfigSourceExplicit})
 	if err != nil {
 		t.Fatalf("customize options failed: %v", err)
 	}
@@ -110,17 +110,17 @@ func TestLoggingOptionsCustomizer_whenFileConfigExists_shouldPreserveAppenderAnd
 }
 
 func TestLoggingOptionsCustomizer_whenRootUsesImplicitAppender_shouldApplyThreshold(t *testing.T) {
-	console := goarklog.NewConsoleAppender()
-	original := goarklog.Options{
-		Appenders: []goarklog.Appender{console},
-		Root:      goarklog.RootLogger{Level: slog.LevelDebug},
+	console := log.NewConsoleAppender()
+	original := log.Options{
+		Appenders: []log.Appender{console},
+		Root:      log.RootLogger{Level: slog.LevelDebug},
 	}
 	environment := newLoggingEnvironment(t, map[string]any{
 		PropertyConsoleThreshold: "error",
 	})
 
 	options, err := loggingOptionsCustomizer(environment)(
-		context.Background(), original, &goarklog.ConfigResult{Source: goarklog.ConfigSourceExplicit},
+		context.Background(), original, &log.ConfigResult{Source: log.ConfigSourceExplicit},
 	)
 	if err != nil {
 		t.Fatalf("customize options failed: %v", err)
@@ -151,7 +151,7 @@ func newLoggingEnvironment(t *testing.T, values map[string]any) coreenv.Environm
 	return environment
 }
 
-func closeAppenders(t *testing.T, appenders []goarklog.Appender) {
+func closeAppenders(t *testing.T, appenders []log.Appender) {
 	t.Helper()
 	for _, appender := range appenders {
 		if err := appender.Close(); err != nil {

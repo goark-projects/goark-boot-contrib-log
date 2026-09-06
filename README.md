@@ -102,7 +102,7 @@ charset, rolling, and structured properties do not replace native appenders.
 ## Runtime API
 
 - `goark.log.logger`: primary `*slog.Logger`.
-- `goark.log.context`: lifecycle-neutral `*goarklog.LoggerContext` alias.
+- `goark.log.context`: lifecycle-neutral `*log.LoggerContext` alias.
 - `goark.log.system`: `gbclog.LoggingSystem` for atomic level changes and
   snapshots.
 - `goark.log.lifecycle`: sole owner of restoration and shutdown.

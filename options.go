@@ -6,11 +6,11 @@ import (
 
 	coreenv "goark.dev/goark/core/env"
 	coreresource "goark.dev/goark/core/resource"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 // LoggerContextFactory 创建由 Starter 管理的 goark-log 运行期。
-type LoggerContextFactory func(ctx context.Context, environment coreenv.Environment) (*goarklog.LoggerContext, error)
+type LoggerContextFactory func(ctx context.Context, environment coreenv.Environment) (*log.LoggerContext, error)
 
 type settings struct {
 	enabled         *bool
@@ -18,7 +18,7 @@ type settings struct {
 	factory         LoggerContextFactory
 	resourceLoader  coreresource.Loader
 	classpathFS     fs.FS
-	customizers     []goarklog.StructuredJSONCustomizer
+	customizers     []log.StructuredJSONCustomizer
 	manageLifecycle bool
 }
 
@@ -51,7 +51,7 @@ func WithClasspathFS(filesystem fs.FS) Option {
 }
 
 // WithStructuredJSONCustomizers 注册显式、类型安全的结构化 JSON 定制器。
-func WithStructuredJSONCustomizers(customizers ...goarklog.StructuredJSONCustomizer) Option {
-	copied := append([]goarklog.StructuredJSONCustomizer(nil), customizers...)
+func WithStructuredJSONCustomizers(customizers ...log.StructuredJSONCustomizer) Option {
+	copied := append([]log.StructuredJSONCustomizer(nil), customizers...)
 	return func(settings *settings) { settings.customizers = copied }
 }

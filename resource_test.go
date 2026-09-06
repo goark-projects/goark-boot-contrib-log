@@ -10,7 +10,7 @@ import (
 
 	coreenv "goark.dev/goark/core/env"
 	coreresource "goark.dev/goark/core/resource"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 func TestDefaultLoggerContextFactory_whenClasspathConfigUsed_shouldLoadAndResolveBootProperties(t *testing.T) {
@@ -68,7 +68,7 @@ root:
 	if err != nil {
 		t.Fatalf("configResourceOption() error = %v", err)
 	}
-	options, result, err := goarklog.LoadOptions(context.Background(), option)
+	options, result, err := log.LoadOptions(context.Background(), option)
 	if err != nil {
 		t.Fatalf("LoadOptions() error = %v", err)
 	}

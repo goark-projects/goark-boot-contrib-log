@@ -7,7 +7,7 @@ import (
 	"goark.dev/boot"
 	goarkcontainer "goark.dev/goark/container"
 	appcontext "goark.dev/goark/context"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 // AutoConfigure 创建 goark-log 自动配置。
@@ -66,7 +66,7 @@ func (c configuration) RegisterWithContext(_ context.Context, config appcontext.
 	if !*resolved.enabled {
 		return nil
 	}
-	return goarkcontainer.Register[*goarklog.LoggerContext](config.Registry(), BeanNameContext, func(ctx context.Context, resolver goarkcontainer.Resolver) (*goarklog.LoggerContext, error) {
+	return goarkcontainer.Register[*log.LoggerContext](config.Registry(), BeanNameContext, func(ctx context.Context, resolver goarkcontainer.Resolver) (*log.LoggerContext, error) {
 		runtime, err := goarkcontainer.Get[*Runtime](ctx, resolver, BeanNameLifecycle)
 		if err != nil {
 			return nil, err

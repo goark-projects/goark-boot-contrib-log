@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	coreenv "goark.dev/goark/core/env"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 // Read 从 Environment 编译日志配置。
@@ -72,10 +72,10 @@ func Read(environment coreenv.Environment) (Properties, error) {
 	if properties.RootLevel, err = optionalLevel(environment, RootLevel); err != nil {
 		return Properties{}, err
 	}
-	if properties.ConsoleThreshold, err = levelWithDefault(environment, ConsoleThreshold, goarklog.LevelTrace); err != nil {
+	if properties.ConsoleThreshold, err = levelWithDefault(environment, ConsoleThreshold, log.LevelTrace); err != nil {
 		return Properties{}, err
 	}
-	if properties.FileThreshold, err = levelWithDefault(environment, FileThreshold, goarklog.LevelTrace); err != nil {
+	if properties.FileThreshold, err = levelWithDefault(environment, FileThreshold, log.LevelTrace); err != nil {
 		return Properties{}, err
 	}
 	if properties.Structured.JSON.ContextInclude, err = optionalBool(environment, StructuredContextInclude); err != nil {
@@ -122,8 +122,8 @@ func defaults() Properties {
 		IncludeApplicationName:  true,
 		IncludeApplicationGroup: true,
 		RegisterShutdownHook:    true,
-		ConsoleThreshold:        levelPointer(goarklog.LevelTrace),
-		FileThreshold:           levelPointer(goarklog.LevelTrace),
+		ConsoleThreshold:        levelPointer(log.LevelTrace),
+		FileThreshold:           levelPointer(log.LevelTrace),
 		LoggerLevels:            make(map[string]slog.Level),
 		Groups:                  cloneGroups(builtInGroups),
 		Structured: StructuredProperties{JSON: JSONProperties{

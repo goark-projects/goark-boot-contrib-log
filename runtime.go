@@ -5,12 +5,12 @@ import (
 	"log/slog"
 	"sync"
 
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 // Runtime 保存应用日志器及其受管生命周期。
 type Runtime struct {
-	context         *goarklog.LoggerContext
+	context         *log.LoggerContext
 	logger          *slog.Logger
 	previousDefault *slog.Logger
 	installed       bool
@@ -31,7 +31,7 @@ func (r *Runtime) Logger() *slog.Logger {
 }
 
 // Context 返回底层 goark-log 运行期；禁用模式返回 nil。
-func (r *Runtime) Context() *goarklog.LoggerContext {
+func (r *Runtime) Context() *log.LoggerContext {
 	if r == nil {
 		return nil
 	}

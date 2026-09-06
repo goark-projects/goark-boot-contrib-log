@@ -5,15 +5,15 @@ import (
 	"strings"
 
 	"goark.dev/gbc-log/internal/properties"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
-func outputLayout(configuration properties.Properties, file bool, customizers []goarklog.StructuredJSONCustomizer) (goarklog.Layout, error) {
+func outputLayout(configuration properties.Properties, file bool, customizers []log.StructuredJSONCustomizer) (log.Layout, error) {
 	format := configuration.Structured.ConsoleFormat
 	if file {
 		format = configuration.Structured.FileFormat
 	}
-	var layout goarklog.Layout
+	var layout log.Layout
 	var err error
 	if strings.TrimSpace(format) == "" {
 		layout, err = textLayout(configuration, file)
@@ -27,14 +27,14 @@ func outputLayout(configuration properties.Properties, file bool, customizers []
 	if file {
 		charset = configuration.FileCharset
 	}
-	encoded, err := goarklog.NewCharsetLayout(layout, charset)
+	encoded, err := log.NewCharsetLayout(layout, charset)
 	if err != nil {
 		return nil, fmt.Errorf("gbc-log: configure logging charset: %w", err)
 	}
 	return encoded, nil
 }
 
-func textLayout(configuration properties.Properties, file bool) (goarklog.Layout, error) {
+func textLayout(configuration properties.Properties, file bool) (log.Layout, error) {
 	pattern := configuration.ConsolePattern
 	if file {
 		pattern = configuration.FilePattern
@@ -42,28 +42,28 @@ func textLayout(configuration properties.Properties, file bool) (goarklog.Layout
 	if strings.TrimSpace(pattern) == "" {
 		pattern = defaultPattern(configuration, file)
 	}
-	layout, err := goarklog.NewPatternLayout(pattern)
+	layout, err := log.NewPatternLayout(pattern)
 	if err != nil {
 		return nil, fmt.Errorf("gbc-log: compile logging pattern: %w", err)
 	}
 	return layout, nil
 }
 
-func structuredLayout(configuration properties.Properties, format string, customizers []goarklog.StructuredJSONCustomizer) (goarklog.Layout, error) {
+func structuredLayout(configuration properties.Properties, format string, customizers []log.StructuredJSONCustomizer) (log.Layout, error) {
 	includeContext := true
 	if configured := configuration.Structured.JSON.ContextInclude; configured != nil {
 		includeContext = *configured
 	}
 	stacktrace := configuration.Structured.JSON.Stacktrace
-	options := goarklog.StructuredJSONOptions{
-		Format:         goarklog.StructuredFormat(strings.ToLower(strings.TrimSpace(format))),
+	options := log.StructuredJSONOptions{
+		Format:         log.StructuredFormat(strings.ToLower(strings.TrimSpace(format))),
 		Include:        configuration.Structured.JSON.Include,
 		Exclude:        configuration.Structured.JSON.Exclude,
 		Rename:         configuration.Structured.JSON.Rename,
 		Add:            configuration.Structured.JSON.Add,
 		IncludeContext: includeContext,
 		ContextPrefix:  configuration.Structured.JSON.ContextPrefix,
-		Stacktrace: goarklog.StructuredStacktraceOptions{
+		Stacktrace: log.StructuredStacktraceOptions{
 			Printer:             structuredStacktracePrinter(stacktrace),
 			RootFirst:           strings.EqualFold(stacktrace.Root, "first"),
 			MaxLength:           optionalIntValue(stacktrace.MaxLength),
@@ -71,35 +71,35 @@ func structuredLayout(configuration properties.Properties, format string, custom
 			IncludeCommonFrames: optionalBoolValue(stacktrace.IncludeCommonFrames),
 			IncludeHashes:       optionalBoolValue(stacktrace.IncludeHashes),
 		},
-		ECS: goarklog.StructuredECSOptions{
+		ECS: log.StructuredECSOptions{
 			ServiceEnvironment: configuration.Structured.ECS.ServiceEnvironment,
 			ServiceName:        firstText(configuration.Structured.ECS.ServiceName, configuration.ApplicationName),
 			ServiceNodeName:    configuration.Structured.ECS.ServiceNodeName,
 			ServiceVersion:     configuration.Structured.ECS.ServiceVersion,
 		},
-		GELF: goarklog.StructuredGELFOptions{
+		GELF: log.StructuredGELFOptions{
 			Host:           firstText(configuration.Structured.GELF.Host, configuration.ApplicationName),
 			ServiceVersion: configuration.Structured.GELF.ServiceVersion,
 		},
 		Customizers: customizers,
 	}
-	layout, err := goarklog.NewStructuredJSONLayout(options)
+	layout, err := log.NewStructuredJSONLayout(options)
 	if err != nil {
 		return nil, fmt.Errorf("gbc-log: configure structured logging: %w", err)
 	}
 	return layout, nil
 }
 
-func structuredStacktracePrinter(stacktrace properties.StacktraceProperties) goarklog.StructuredStacktracePrinter {
+func structuredStacktracePrinter(stacktrace properties.StacktraceProperties) log.StructuredStacktracePrinter {
 	printer := strings.ToLower(strings.TrimSpace(stacktrace.Printer))
 	if printer == "logging-system" {
-		return goarklog.StructuredStacktracePrinterLoggingSystem
+		return log.StructuredStacktracePrinterLoggingSystem
 	}
 	if printer == "standard" || strings.TrimSpace(stacktrace.Root) != "" || stacktrace.MaxLength != nil ||
 		stacktrace.MaxThrowableDepth != nil || stacktrace.IncludeCommonFrames != nil || stacktrace.IncludeHashes != nil {
-		return goarklog.StructuredStacktracePrinterStandard
+		return log.StructuredStacktracePrinterStandard
 	}
-	return goarklog.StructuredStacktracePrinterLoggingSystem
+	return log.StructuredStacktracePrinterLoggingSystem
 }
 
 func optionalBoolValue(value *bool) bool {

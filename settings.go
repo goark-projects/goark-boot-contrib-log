@@ -7,7 +7,7 @@ import (
 
 	coreenv "goark.dev/goark/core/env"
 	coreresource "goark.dev/goark/core/resource"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 func newSettings(environment coreenv.Environment, options []Option) (settings, error) {
@@ -47,21 +47,21 @@ func newSettings(environment coreenv.Environment, options []Option) (settings, e
 		if err != nil {
 			return settings{}, err
 		}
-		resolved.factory = func(ctx context.Context, environment coreenv.Environment) (*goarklog.LoggerContext, error) {
+		resolved.factory = func(ctx context.Context, environment coreenv.Environment) (*log.LoggerContext, error) {
 			return defaultLoggerContextFactory(ctx, environment, loader, resolved.customizers)
 		}
 	}
 	return resolved, nil
 }
 
-func defaultLoggerContextFactory(ctx context.Context, environment coreenv.Environment, loader coreresource.Loader, customizerGroups ...[]goarklog.StructuredJSONCustomizer) (*goarklog.LoggerContext, error) {
-	var customizers []goarklog.StructuredJSONCustomizer
+func defaultLoggerContextFactory(ctx context.Context, environment coreenv.Environment, loader coreresource.Loader, customizerGroups ...[]log.StructuredJSONCustomizer) (*log.LoggerContext, error) {
+	var customizers []log.StructuredJSONCustomizer
 	if len(customizerGroups) > 0 {
 		customizers = customizerGroups[0]
 	}
-	loadOptions := []goarklog.ConfigLoadOption{
-		goarklog.WithBootPropertyResolver(environment),
-		goarklog.WithOptionsCustomizer(loggingOptionsCustomizer(environment, customizers)),
+	loadOptions := []log.ConfigLoadOption{
+		log.WithBootPropertyResolver(environment),
+		log.WithOptionsCustomizer(loggingOptionsCustomizer(environment, customizers)),
 	}
 	resourceOption, err := configResourceOption(ctx, environment, loader)
 	if err != nil {
@@ -70,7 +70,7 @@ func defaultLoggerContextFactory(ctx context.Context, environment coreenv.Enviro
 	if resourceOption != nil {
 		loadOptions = append(loadOptions, resourceOption)
 	}
-	returnContext, _, err := goarklog.NewConfiguredLoggerContext(
+	returnContext, _, err := log.NewConfiguredLoggerContext(
 		ctx,
 		loadOptions...,
 	)
@@ -92,7 +92,7 @@ func defaultResourceLoader(configuration settings) (coreresource.Loader, error) 
 	return loader, nil
 }
 
-func configResourceOption(ctx context.Context, environment coreenv.Environment, loader coreresource.Loader) (goarklog.ConfigLoadOption, error) {
+func configResourceOption(ctx context.Context, environment coreenv.Environment, loader coreresource.Loader) (log.ConfigLoadOption, error) {
 	if environment == nil {
 		return nil, nil
 	}
@@ -121,11 +121,11 @@ func configResourceOption(ctx context.Context, environment coreenv.Environment, 
 		return nil, fmt.Errorf("gbc-log: logging.config %q does not exist", location)
 	}
 	if file, ok := resource.(*coreresource.FileResource); ok {
-		return goarklog.WithConfigPath(file.Path()), nil
+		return log.WithConfigPath(file.Path()), nil
 	}
 	data, err := resource.ReadAll(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("gbc-log: read logging.config %q: %w", location, err)
 	}
-	return goarklog.WithConfigData(location, data), nil
+	return log.WithConfigData(location, data), nil
 }

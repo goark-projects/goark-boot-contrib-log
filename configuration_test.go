@@ -14,17 +14,17 @@ import (
 	gbclog "goark.dev/gbc-log"
 	"goark.dev/goark"
 	coreenv "goark.dev/goark/core/env"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 func TestAutoConfigureInstallsLoggerAndClosesContext(t *testing.T) {
 	var output bytes.Buffer
 	previous := slog.Default()
 	app, err := boot.Run(t.Context(), boot.WithAutoConfiguration(gbclog.AutoConfigure(
-		gbclog.WithLoggerContextFactory(func(context.Context, coreenv.Environment) (*goarklog.LoggerContext, error) {
-			return goarklog.NewLoggerContext(goarklog.Options{
-				Appenders: []goarklog.Appender{goarklog.NewConsoleAppender(goarklog.WithConsoleWriter(&output))},
-				Root:      goarklog.RootLogger{Level: slog.LevelInfo, AppenderRefs: []string{"console"}},
+		gbclog.WithLoggerContextFactory(func(context.Context, coreenv.Environment) (*log.LoggerContext, error) {
+			return log.NewLoggerContext(log.Options{
+				Appenders: []log.Appender{log.NewConsoleAppender(log.WithConsoleWriter(&output))},
+				Root:      log.RootLogger{Level: slog.LevelInfo, AppenderRefs: []string{"console"}},
 			})
 		}),
 	)))
@@ -113,7 +113,7 @@ func TestAutoConfigure_whenShutdownHookDisabled_shouldLeaveContextOpen(t *testin
 		t.Fatalf("boot.Run: %v", err)
 	}
 	appContext, _ := app.Context()
-	loggerContext := goark.MustGet[*goarklog.LoggerContext](t.Context(), appContext, gbclog.BeanNameContext)
+	loggerContext := goark.MustGet[*log.LoggerContext](t.Context(), appContext, gbclog.BeanNameContext)
 	if err := app.Close(t.Context()); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
@@ -150,7 +150,7 @@ func TestAutoConfigure_whenLoggingPropertiesExist_shouldWriteConfiguredNamedLogg
 		t.Fatalf("boot.Run: %v", err)
 	}
 	appContext, _ := app.Context()
-	loggerContext := goark.MustGet[*goarklog.LoggerContext](t.Context(), appContext, gbclog.BeanNameContext)
+	loggerContext := goark.MustGet[*log.LoggerContext](t.Context(), appContext, gbclog.BeanNameContext)
 	loggerContext.Logger("admin.service").DebugContext(t.Context(), "named debug")
 	loggerContext.Logger("other.service").DebugContext(t.Context(), "root debug")
 	if err := app.Close(t.Context()); err != nil {

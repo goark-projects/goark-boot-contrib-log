@@ -8,20 +8,20 @@ import (
 	internaloutput "goark.dev/gbc-log/internal/output"
 	internalproperties "goark.dev/gbc-log/internal/properties"
 	coreenv "goark.dev/goark/core/env"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
-func loggingOptionsCustomizer(environment coreenv.Environment, customizerGroups ...[]goarklog.StructuredJSONCustomizer) goarklog.OptionsCustomizer {
-	var customizers []goarklog.StructuredJSONCustomizer
+func loggingOptionsCustomizer(environment coreenv.Environment, customizerGroups ...[]log.StructuredJSONCustomizer) log.OptionsCustomizer {
+	var customizers []log.StructuredJSONCustomizer
 	if len(customizerGroups) > 0 {
 		customizers = customizerGroups[0]
 	}
-	return func(_ context.Context, current goarklog.Options, source *goarklog.ConfigResult) (goarklog.Options, error) {
+	return func(_ context.Context, current log.Options, source *log.ConfigResult) (log.Options, error) {
 		properties, err := readLoggingProperties(environment)
 		if err != nil {
 			return current, err
 		}
-		if source != nil && source.Source == goarklog.ConfigSourceDefault {
+		if source != nil && source.Source == log.ConfigSourceDefault {
 			if current, err = internaloutput.ApplyDefault(current, properties, customizers...); err != nil {
 				return current, err
 			}
@@ -33,7 +33,7 @@ func loggingOptionsCustomizer(environment coreenv.Environment, customizerGroups 
 	}
 }
 
-func applyLoggerLevels(options *goarklog.Options, properties loggingProperties) {
+func applyLoggerLevels(options *log.Options, properties loggingProperties) {
 	if properties.RootLevel != nil {
 		options.Root.Level = *properties.RootLevel
 	}
@@ -47,11 +47,11 @@ func applyLoggerLevels(options *goarklog.Options, properties loggingProperties) 
 			options.Loggers[index].Level = levelPointer(level)
 			continue
 		}
-		options.Loggers = append(options.Loggers, goarklog.LoggerRule{Name: name, Level: levelPointer(level)})
+		options.Loggers = append(options.Loggers, log.LoggerRule{Name: name, Level: levelPointer(level)})
 	}
 }
 
-func applyAppenderThreshold(options *goarklog.Options, wanted string, level *slog.Level) {
+func applyAppenderThreshold(options *log.Options, wanted string, level *slog.Level) {
 	if level == nil {
 		return
 	}
@@ -62,7 +62,7 @@ func applyAppenderThreshold(options *goarklog.Options, wanted string, level *slo
 	if len(options.Root.AppenderRefs) == 0 && len(options.Root.AppenderRefControls) == 0 &&
 		len(options.Appenders) > 0 && options.Appenders[0] != nil && strings.EqualFold(options.Appenders[0].Name(), name) {
 		options.Root.AppenderRefControls = append(options.Root.AppenderRefControls,
-			goarklog.NewAppenderRef(name, goarklog.WithAppenderRefLevel(*level)))
+			log.NewAppenderRef(name, log.WithAppenderRefLevel(*level)))
 	}
 	applyReferenceThreshold(&options.Root.AppenderRefs, &options.Root.AppenderRefControls, name, *level)
 	for index := range options.Loggers {
@@ -70,7 +70,7 @@ func applyAppenderThreshold(options *goarklog.Options, wanted string, level *slo
 	}
 }
 
-func applyReferenceThreshold(refs *[]string, controls *[]goarklog.AppenderRef, name string, level slog.Level) {
+func applyReferenceThreshold(refs *[]string, controls *[]log.AppenderRef, name string, level slog.Level) {
 	hadSimpleRef := containsAppenderRef(*refs, name)
 	*refs = removeAppenderRef(*refs, name)
 	for index := range *controls {
@@ -80,11 +80,11 @@ func applyReferenceThreshold(refs *[]string, controls *[]goarklog.AppenderRef, n
 		}
 	}
 	if hadSimpleRef {
-		*controls = append(*controls, goarklog.NewAppenderRef(name, goarklog.WithAppenderRefLevel(level)))
+		*controls = append(*controls, log.NewAppenderRef(name, log.WithAppenderRefLevel(level)))
 	}
 }
 
-func findAppenderName(appenders []goarklog.Appender, wanted string) string {
+func findAppenderName(appenders []log.Appender, wanted string) string {
 	for _, appender := range appenders {
 		if appender != nil && strings.EqualFold(appender.Name(), wanted) {
 			return appender.Name()

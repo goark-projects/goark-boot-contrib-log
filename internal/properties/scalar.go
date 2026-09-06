@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	coreenv "goark.dev/goark/core/env"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 func optionalString(environment coreenv.Environment, key string) string {
@@ -75,7 +75,7 @@ func dataSizeWithDefault(environment coreenv.Environment, key string, fallback i
 	if !found {
 		return fallback, nil
 	}
-	parsed, err := goarklog.ParseByteSize(value)
+	parsed, err := log.ParseByteSize(value)
 	if err != nil {
 		return 0, fmt.Errorf("gbc-log: invalid data size for %q: %w", key, err)
 	}
@@ -111,7 +111,7 @@ func levelPointer(level slog.Level) *slog.Level {
 }
 
 func parseLevel(key string, value string) (slog.Level, error) {
-	level, err := goarklog.ParseLevel(strings.TrimSpace(value))
+	level, err := log.ParseLevel(strings.TrimSpace(value))
 	if err != nil {
 		return 0, fmt.Errorf("gbc-log: invalid level for %q: %w", key, err)
 	}

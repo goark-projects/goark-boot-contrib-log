@@ -6,19 +6,19 @@ import (
 	"strings"
 
 	"goark.dev/gbc-log/internal/properties"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 // ApplyDefault 使用 Boot 属性替换 goark-log 的默认输出端。
-func ApplyDefault(options goarklog.Options, configuration properties.Properties, customizers ...goarklog.StructuredJSONCustomizer) (goarklog.Options, error) {
-	appenders := make([]goarklog.Appender, 0, 2)
+func ApplyDefault(options log.Options, configuration properties.Properties, customizers ...log.StructuredJSONCustomizer) (log.Options, error) {
+	appenders := make([]log.Appender, 0, 2)
 	refs := make([]string, 0, 2)
 	if configuration.ConsoleEnabled {
 		layout, err := outputLayout(configuration, false, customizers)
 		if err != nil {
 			return options, err
 		}
-		appenders = append(appenders, goarklog.NewConsoleAppender(goarklog.WithConsoleLayout(layout)))
+		appenders = append(appenders, log.NewConsoleAppender(log.WithConsoleLayout(layout)))
 		refs = append(refs, "console")
 	}
 	fileName := resolvedFileName(configuration)
@@ -31,9 +31,9 @@ func ApplyDefault(options goarklog.Options, configuration properties.Properties,
 		refs = append(refs, "file")
 	}
 	if len(appenders) == 0 {
-		appenders = append(appenders, goarklog.NewConsoleAppender(
-			goarklog.WithConsoleName("discard"),
-			goarklog.WithConsoleWriter(io.Discard),
+		appenders = append(appenders, log.NewConsoleAppender(
+			log.WithConsoleName("discard"),
+			log.WithConsoleWriter(io.Discard),
 		))
 		refs = append(refs, "discard")
 	}
@@ -53,7 +53,7 @@ func resolvedFileName(configuration properties.Properties) string {
 	return ""
 }
 
-func newRollingFileAppender(fileName string, configuration properties.Properties, customizers []goarklog.StructuredJSONCustomizer) (*goarklog.RollingFileAppender, error) {
+func newRollingFileAppender(fileName string, configuration properties.Properties, customizers []log.StructuredJSONCustomizer) (*log.RollingFileAppender, error) {
 	layout, err := outputLayout(configuration, true, customizers)
 	if err != nil {
 		return nil, err
@@ -63,13 +63,13 @@ func newRollingFileAppender(fileName string, configuration properties.Properties
 		filePattern = fileName + ".%d{yyyy-MM-dd}.%i.gz"
 	}
 	filePattern = strings.ReplaceAll(filePattern, "${LOG_FILE}", fileName)
-	return goarklog.NewRollingFileAppender(fileName,
-		goarklog.WithRollingFileName("file"),
-		goarklog.WithRollingFileLayout(layout),
-		goarklog.WithRollingFilePattern(filePattern),
-		goarklog.WithRollingMaxSize(configuration.MaxFileSize),
-		goarklog.WithRollingMaxBackups(configuration.MaxHistory),
-		goarklog.WithRollingTotalSizeCap(configuration.TotalSizeCap),
-		goarklog.WithRollingCleanHistoryOnStart(configuration.CleanHistoryOnStart),
+	return log.NewRollingFileAppender(fileName,
+		log.WithRollingFileName("file"),
+		log.WithRollingFileLayout(layout),
+		log.WithRollingFilePattern(filePattern),
+		log.WithRollingMaxSize(configuration.MaxFileSize),
+		log.WithRollingMaxBackups(configuration.MaxHistory),
+		log.WithRollingTotalSizeCap(configuration.TotalSizeCap),
+		log.WithRollingCleanHistoryOnStart(configuration.CleanHistoryOnStart),
 	)
 }

@@ -65,7 +65,7 @@ logging:
 ## 运行期 API
 
 - `goark.log.logger`：primary `*slog.Logger`。
-- `goark.log.context`：生命周期中性的 `*goarklog.LoggerContext` 访问别名。
+- `goark.log.context`：生命周期中性的 `*log.LoggerContext` 访问别名。
 - `goark.log.system`：原子修改级别和查询快照的 `LoggingSystem`。
 - `goark.log.lifecycle`：恢复默认 Logger、排空和关闭日志的唯一所有者。
 

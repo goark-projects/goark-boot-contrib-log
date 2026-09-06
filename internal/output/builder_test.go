@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"goark.dev/gbc-log/internal/properties"
-	goarklog "goark.dev/log"
+	"goark.dev/log"
 )
 
 func TestApplyDefault_whenConsoleDisabledWithoutFile_shouldInstallDiscardAppender(t *testing.T) {
@@ -17,7 +17,7 @@ func TestApplyDefault_whenConsoleDisabledWithoutFile_shouldInstallDiscardAppende
 		t.Fatalf("Read(nil) error = %v", err)
 	}
 	configuration.ConsoleEnabled = false
-	options, err := ApplyDefault(goarklog.DefaultOptions(), configuration)
+	options, err := ApplyDefault(log.DefaultOptions(), configuration)
 	if err != nil {
 		t.Fatalf("ApplyDefault() error = %v", err)
 	}
@@ -34,7 +34,7 @@ func TestApplyDefault_whenFileConfigured_shouldUseRollingFileAppender(t *testing
 	}
 	configuration.ConsoleEnabled = false
 	configuration.FileName = t.TempDir() + "/admin.log"
-	options, err := ApplyDefault(goarklog.DefaultOptions(), configuration)
+	options, err := ApplyDefault(log.DefaultOptions(), configuration)
 	if err != nil {
 		t.Fatalf("ApplyDefault() error = %v", err)
 	}
@@ -42,7 +42,7 @@ func TestApplyDefault_whenFileConfigured_shouldUseRollingFileAppender(t *testing
 	if len(options.Appenders) != 1 {
 		t.Fatalf("appenders = %#v", options.Appenders)
 	}
-	if _, ok := options.Appenders[0].(*goarklog.RollingFileAppender); !ok {
+	if _, ok := options.Appenders[0].(*log.RollingFileAppender); !ok {
 		t.Fatalf("file appender type = %T", options.Appenders[0])
 	}
 	if options.Appenders[0].Name() != "file" {
@@ -57,12 +57,12 @@ func TestDefaultPattern_shouldRenderConfiguredIdentityAndGoarkDateFormat(t *test
 	}
 	configuration.ApplicationName = "admin%service"
 	configuration.ApplicationGroup = "backend"
-	layout, err := goarklog.NewPatternLayout(defaultPattern(configuration, false))
+	layout, err := log.NewPatternLayout(defaultPattern(configuration, false))
 	if err != nil {
 		t.Fatalf("NewPatternLayout() error = %v", err)
 	}
 	var output bytes.Buffer
-	err = layout.Format(&output, goarklog.Event{
+	err = layout.Format(&output, log.Event{
 		Time:    time.Date(2026, 9, 3, 20, 16, 52, 951_000_000, time.Local),
 		Level:   slog.LevelInfo,
 		Logger:  "goark.dev.arkhos.hertz",
@@ -96,7 +96,7 @@ func TestTextLayout_whenFileCharsetConfigured_shouldEncodeOutput(t *testing.T) {
 		t.Fatalf("textLayout() error = %v", err)
 	}
 	var output bytes.Buffer
-	if err := layout.Format(&output, goarklog.Event{Message: "caf\u00e9"}); err != nil {
+	if err := layout.Format(&output, log.Event{Message: "caf\u00e9"}); err != nil {
 		t.Fatalf("Format() error = %v", err)
 	}
 	if !bytes.Equal(output.Bytes(), []byte{'c', 'a', 'f', 0xe9}) {
@@ -127,8 +127,8 @@ func TestOutputLayout_whenStructuredFormatConfigured_shouldMapProperties(t *test
 	configuration.Structured.JSON.ContextPrefix = "ctx."
 	configuration.Structured.JSON.Add["build"] = "42"
 	configuration.Structured.JSON.Rename["message"] = "msg"
-	layout, err := outputLayout(configuration, false, []goarklog.StructuredJSONCustomizer{
-		goarklog.StructuredJSONCustomizerFunc(func(_ goarklog.Event, fields goarklog.StructuredJSONFieldAppender) {
+	layout, err := outputLayout(configuration, false, []log.StructuredJSONCustomizer{
+		log.StructuredJSONCustomizerFunc(func(_ log.Event, fields log.StructuredJSONFieldAppender) {
 			fields.Add("custom", slog.StringValue("ok"))
 		}),
 	})
@@ -136,7 +136,7 @@ func TestOutputLayout_whenStructuredFormatConfigured_shouldMapProperties(t *test
 		t.Fatalf("outputLayout() error = %v", err)
 	}
 	var output bytes.Buffer
-	if err := layout.Format(&output, goarklog.Event{
+	if err := layout.Format(&output, log.Event{
 		Time: time.Date(2026, 9, 4, 10, 0, 0, 0, time.UTC), Logger: "admin", Message: "started",
 		Attrs: []slog.Attr{slog.String("trace", "trace-1")},
 	}); err != nil {
@@ -151,23 +151,23 @@ func TestOutputLayout_whenStructuredFormatConfigured_shouldMapProperties(t *test
 }
 
 func TestStructuredStacktracePrinterMatchesBootDefaults(t *testing.T) {
-	if actual := structuredStacktracePrinter(properties.StacktraceProperties{}); actual != goarklog.StructuredStacktracePrinterLoggingSystem {
+	if actual := structuredStacktracePrinter(properties.StacktraceProperties{}); actual != log.StructuredStacktracePrinterLoggingSystem {
 		t.Fatalf("default printer = %q", actual)
 	}
 	includeCommonFrames := false
 	configured := properties.StacktraceProperties{IncludeCommonFrames: &includeCommonFrames}
-	if actual := structuredStacktracePrinter(configured); actual != goarklog.StructuredStacktracePrinterStandard {
+	if actual := structuredStacktracePrinter(configured); actual != log.StructuredStacktracePrinterStandard {
 		t.Fatalf("configured printer = %q", actual)
 	}
 	configured.Printer = "logging-system"
-	if actual := structuredStacktracePrinter(configured); actual != goarklog.StructuredStacktracePrinterLoggingSystem {
+	if actual := structuredStacktracePrinter(configured); actual != log.StructuredStacktracePrinterLoggingSystem {
 		t.Fatalf("explicit logging-system printer = %q", actual)
 	}
 }
 
 func boolPointer(value bool) *bool { return &value }
 
-func closeAppenders(t *testing.T, appenders []goarklog.Appender) {
+func closeAppenders(t *testing.T, appenders []log.Appender) {
 	t.Helper()
 	for _, appender := range appenders {
 		if err := appender.Close(); err != nil {
